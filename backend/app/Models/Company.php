@@ -16,4 +16,12 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * Bir şirketin birden çok ürünü olabilir.
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
 }
