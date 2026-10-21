@@ -25,6 +25,7 @@
                                     <th class="py-2">Ad</th>
                                     <th class="py-2">Stok Kodu</th>
                                     <th class="py-2">Birim</th>
+                                    <th class="py-2">Mevcut Stok</th>
                                     <th class="py-2">Fiyat</th>
                                     <th class="py-2">Raf Ömrü</th>
                                     <th class="py-2"></th>
@@ -36,6 +37,13 @@
                                         <td class="py-2">{{ $product->name }}</td>
                                         <td class="py-2">{{ $product->sku ?? '-' }}</td>
                                         <td class="py-2">{{ ucfirst($product->unit) }}</td>
+                                        @php
+                                            // Mevcut stok = girişler - (satışlar + fireler)
+                                            $stock = (float) $product->stock_in - (float) $product->stock_out;
+                                        @endphp
+                                        <td class="py-2 {{ $stock <= 0 ? 'text-red-600 font-semibold' : '' }}">
+                                            {{ rtrim(rtrim(number_format($stock, 2, ',', '.'), '0'), ',') }} {{ ucfirst($product->unit) }}
+                                        </td>
                                         <td class="py-2">{{ number_format($product->price, 2, ',', '.') }} ₺</td>
                                         <td class="py-2">{{ $product->shelf_life_days ? $product->shelf_life_days.' gün' : '-' }}</td>
                                         <td class="py-2 text-right">

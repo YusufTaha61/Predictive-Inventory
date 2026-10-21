@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,6 +17,9 @@ class ProductController extends Controller
     public function index(Request $request): View
     {
         $products = $request->user()->company->products()
+            // Her ürün için giriş ve çıkış (satış + fire) toplamlarını tek sorguda getirir.
+            ->withSum(['stockMovements as stock_in' => fn ($q) => $q->where('type', StockMovement::TYPE_IN)], 'quantity')
+            ->withSum(['stockMovements as stock_out' => fn ($q) => $q->whereIn('type', [StockMovement::TYPE_SALE, StockMovement::TYPE_WASTE])], 'quantity')
             ->orderBy('name')
             ->paginate(15);
 
