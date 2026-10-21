@@ -24,4 +24,12 @@ class Company extends Model
     {
         return $this->hasMany(Product::class);
     }
+
+    /**
+     * Bir şirketin birden çok stok hareketi olabilir.
+     */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 }
