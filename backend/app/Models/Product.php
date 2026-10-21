@@ -10,6 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['name', 'sku', 'unit', 'price', 'shelf_life_days'])]
 class Product extends Model
 {
+    /**
+     * Ürünün ölçü birimi seçenekleri (miktar değil, ölçü türü).
+     */
+    public const UNITS = ['adet', 'kg', 'litre', 'paket', 'koli'];
+
     protected function casts(): array
     {
         return [
@@ -32,5 +37,21 @@ class Product extends Model
     public function stockMovements(): HasMany
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    /**
+     * Mevcut stok = girişler - (satışlar + fireler)
+     */
+    public function currentStock(): float
+    {
+        $in = $this->stockMovements()
+            ->where('type', StockMovement::TYPE_IN)
+            ->sum('quantity');
+
+        $out = $this->stockMovements()
+            ->whereIn('type', [StockMovement::TYPE_SALE, StockMovement::TYPE_WASTE])
+            ->sum('quantity');
+
+        return (float) $in - (float) $out;
     }
 }

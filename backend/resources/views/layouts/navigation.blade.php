@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                         Ürünler
                     </x-nav-link>
+                    <x-nav-link :href="route('stock-movements.index')" :active="request()->routeIs('stock-movements.*')">
+                        Stok Hareketleri
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -75,6 +78,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('products.index')" :active="request()->routeIs('products.*')">
                 Ürünler
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('stock-movements.index')" :active="request()->routeIs('stock-movements.*')">
+                Stok Hareketleri
             </x-responsive-nav-link>
         </div>
 
