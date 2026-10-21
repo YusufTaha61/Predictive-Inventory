@@ -35,7 +35,7 @@
                                     <tr class="border-b">
                                         <td class="py-2">{{ $product->name }}</td>
                                         <td class="py-2">{{ $product->sku ?? '-' }}</td>
-                                        <td class="py-2">{{ $product->unit }}</td>
+                                        <td class="py-2">{{ ucfirst($product->unit) }}</td>
                                         <td class="py-2">{{ number_format($product->price, 2, ',', '.') }} ₺</td>
                                         <td class="py-2">{{ $product->shelf_life_days ? $product->shelf_life_days.' gün' : '-' }}</td>
                                         <td class="py-2 text-right">

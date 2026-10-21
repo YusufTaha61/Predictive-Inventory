@@ -13,14 +13,18 @@
 </div>
 
 <div class="mt-4">
-    <x-input-label for="unit" value="Birim (adet, kg, litre...)" />
-    <x-text-input id="unit" name="unit" type="text" class="block mt-1 w-full" :value="old('unit', $product->unit ?? 'adet')" required />
+    <x-input-label for="unit" value="Ölçü Birimi" />
+    <select id="unit" name="unit" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" required>
+        @foreach (\App\Models\Product::UNITS as $unit)
+            <option value="{{ $unit }}" @selected(old('unit', $product->unit ?? 'adet') === $unit)>{{ ucfirst($unit) }}</option>
+        @endforeach
+    </select>
     <x-input-error :messages="$errors->get('unit')" class="mt-2" />
 </div>
 
 <div class="mt-4">
     <x-input-label for="price" value="Fiyat (₺)" />
-    <x-text-input id="price" name="price" type="number" step="0.01" min="0" class="block mt-1 w-full" :value="old('price', $product->price ?? '0')" required />
+    <x-text-input id="price" name="price" type="number" step="any" min="0" class="block mt-1 w-full" :value="old('price', $product->price ?? '0')" required />
     <x-input-error :messages="$errors->get('price')" class="mt-2" />
 </div>
 

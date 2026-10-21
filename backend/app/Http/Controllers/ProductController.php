@@ -80,7 +80,7 @@ class ProductController extends Controller
                     ->where('company_id', $request->user()->company_id)
                     ->ignore($product),
             ],
-            'unit' => ['required', 'string', 'max:20'],
+            'unit' => ['required', Rule::in(Product::UNITS)],
             'price' => ['required', 'numeric', 'min:0'],
             'shelf_life_days' => ['nullable', 'integer', 'min:1'],
         ]);
