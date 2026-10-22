@@ -1,0 +1,6 @@
+# Sanal ortam (her bilgisayarda pip install -r requirements.txt ile yeniden kurulur)
+.venv/
+__pycache__/
+
+# Eğitilen model dosyası (python -m src.train ile yeniden üretilir)
+models/
