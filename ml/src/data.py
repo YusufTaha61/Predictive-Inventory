@@ -1,0 +1,86 @@
+"""Veri yükleme: Laravel'in SQLite veritabanından ürünleri ve günlük satışları okur.
+
+Python servisi veriyi kopyalamaz, doğrudan Laravel'in veritabanını okur:
+    backend/database/database.sqlite
+
+Başka bir veritabanı dosyası kullanmak için DB_PATH ortam değişkeni verilebilir.
+"""
+from __future__ import annotations
+
+import os
+import sqlite3
+from pathlib import Path
+
+import pandas as pd
+
+ML_DIR = Path(__file__).resolve().parents[1]
+DEFAULT_DB = ML_DIR.parent / "backend" / "database" / "database.sqlite"
+
+
+def db_path() -> Path:
+    return Path(os.getenv("DB_PATH") or DEFAULT_DB)
+
+
+def _connect() -> sqlite3.Connection:
+    path = db_path()
+    if not path.exists():
+        raise FileNotFoundError(f"veritabanı bulunamadı: {path}")
+    # Sadece okuma modunda açılır; Python tarafı veritabanına hiçbir şey yazmaz.
+    return sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+
+
+def load_products(product_id: int | None = None) -> pd.DataFrame:
+    """Ürünler: product_id, company_id, name, shelf_life_days, price."""
+    sql = "SELECT id AS product_id, company_id, name, shelf_life_days, price FROM products"
+    params: tuple = ()
+    if product_id is not None:
+        sql += " WHERE id = ?"
+        params = (product_id,)
+    with _connect() as con:
+        return pd.read_sql_query(sql, con, params=params)
+
+
+def load_daily_sales(product_id: int | None = None) -> pd.DataFrame:
+    """Günlük satış tablosu: date, product_id, units_sold.
+
+    - Her ürün için ilk hareket gününden veritabanındaki son güne kadar her gün bir satır vardır.
+    - Satış olmayan günler 0 olarak doldurulur (model "o gün hiç satılmadı" bilgisini de görmeli).
+    - Sadece "sale" (satış) hareketleri sayılır; giriş ve fire satış değildir.
+    """
+    only_one = "" if product_id is None else "AND product_id = ?"
+    params: tuple = () if product_id is None else (product_id,)
+    with _connect() as con:
+        # date(): tarih "2026-10-16" ya da "2026-10-16 00:00:00" olarak kayıtlı olabilir
+        sales = pd.read_sql_query(
+            f"""SELECT product_id, date(moved_on) AS date, SUM(quantity) AS units_sold
+                FROM stock_movements
+                WHERE type = 'sale' {only_one}
+                GROUP BY product_id, date(moved_on)""",
+            con, params=params,
+        )
+        first = pd.read_sql_query(
+            f"""SELECT product_id, MIN(date(moved_on)) AS first_day
+                FROM stock_movements
+                WHERE 1 = 1 {only_one}
+                GROUP BY product_id""",
+            con, params=params,
+        )
+        # Son gün tüm şirketler için aynıdır: veritabanındaki en son hareket günü
+        last_day = con.execute("SELECT MAX(date(moved_on)) FROM stock_movements").fetchone()[0]
+
+    if first.empty or last_day is None:
+        return pd.DataFrame(columns=["date", "product_id", "units_sold"])
+
+    sales["date"] = pd.to_datetime(sales["date"])
+    last_day = pd.Timestamp(last_day)
+
+    # Her ürün için boşluksuz bir gün listesi oluştur, satışları üzerine yerleştir
+    frames = []
+    for row in first.itertuples():
+        days = pd.date_range(pd.Timestamp(row.first_day), last_day, freq="D")
+        frames.append(pd.DataFrame({"date": days, "product_id": row.product_id}))
+    full = pd.concat(frames, ignore_index=True)
+
+    full = full.merge(sales, on=["date", "product_id"], how="left")
+    full["units_sold"] = full["units_sold"].fillna(0).astype(float)
+    return full.sort_values(["product_id", "date"]).reset_index(drop=True)
