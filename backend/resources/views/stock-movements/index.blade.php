@@ -48,12 +48,15 @@
                                         </td>
                                         <td class="py-2">{{ rtrim(rtrim(number_format($movement->quantity, 2, ',', '.'), '0'), ',') }} {{ ucfirst($movement->product->unit) }}</td>
                                         <td class="py-2">{{ $movement->note ?? '-' }}</td>
-                                        <td class="py-2 text-right">
-                                            <form method="POST" action="{{ route('stock-movements.destroy', $movement) }}" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:underline">Sil</button>
-                                            </form>
+                                        <td class="py-2">
+                                            <div class="flex justify-end items-center gap-2">
+                                                <form method="POST" action="{{ route('stock-movements.destroy', $movement) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="px-3 py-1 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-medium hover:bg-red-100">Sil</button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

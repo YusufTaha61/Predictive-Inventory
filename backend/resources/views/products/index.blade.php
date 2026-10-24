@@ -46,14 +46,19 @@
                                         </td>
                                         <td class="py-2">{{ number_format($product->price, 2, ',', '.') }} ₺</td>
                                         <td class="py-2">{{ $product->shelf_life_days ? $product->shelf_life_days.' gün' : '-' }}</td>
-                                        <td class="py-2 text-right">
-                                            <a href="{{ route('products.forecast', $product) }}" class="text-indigo-600 hover:underline mr-3">Tahmin</a>
-                                            <a href="{{ route('products.edit', $product) }}" class="text-indigo-600 hover:underline">Düzenle</a>
-                                            <form method="POST" action="{{ route('products.destroy', $product) }}" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="ms-3 text-red-600 hover:underline">Sil</button>
-                                            </form>
+                                        <td class="py-2">
+                                            <div class="flex justify-end items-center gap-2">
+                                                <a href="{{ route('products.forecast', $product) }}"
+                                                class="px-3 py-1 rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-medium hover:bg-indigo-100">Tahmin</a>
+                                                <a href="{{ route('products.edit', $product) }}"
+                                                class="px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-100">Düzenle</a>
+                                                <form method="POST" action="{{ route('products.destroy', $product) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="px-3 py-1 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-medium hover:bg-red-100">Sil</button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
