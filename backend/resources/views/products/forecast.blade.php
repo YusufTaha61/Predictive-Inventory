@@ -78,7 +78,7 @@
                         <div class="flex items-center gap-3 py-1">
                             <div class="w-24 text-sm text-gray-600">{{ \Carbon\Carbon::parse($day['date'])->format('d.m.Y') }}</div>
                             <div class="flex-1 bg-gray-100 rounded h-5">
-                                <div class="bg-indigo-500 h-5 rounded" style="width: {{ $day['units'] / $maxUnits * 100 }}%"></div>
+                                <div class="bg-indigo-500 h-5 rounded" @style(['width: ' . ($day['units'] / $maxUnits * 100) . '%'])></div>
                             </div>
                             <div class="w-16 text-right text-sm">{{ $day['units'] }}</div>
                         </div>
