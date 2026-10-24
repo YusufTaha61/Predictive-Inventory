@@ -11,6 +11,7 @@ böylece eğitim ve tahmin birbirinden farklılaşamaz.
 """
 from __future__ import annotations
 
+import math
 import joblib
 import numpy as np
 import pandas as pd
@@ -77,4 +78,64 @@ def forecast(bundle: dict | None, product_id: int) -> dict:
         "forecast": [{"date": str(d.date()), "units": round(float(v), 2)} for d, v in zip(future_days, values)],
         "total_next_7_days": round(float(np.sum(values)), 2),
         "warnings": warnings,
+    }
+
+
+SAFETY_RATIO = 0.2  # %20 yedek stok
+
+
+def order_suggestion(bundle: dict | None, product_id: int, current_stock: float) -> dict:
+    """Kaç tane sipariş vermeli? = 7 günlük satış + %20 yedek - elimdeki stok"""
+    fc = forecast(bundle, product_id)
+    total = fc["total_next_7_days"]
+    if total is None:
+        return {"product_id": product_id, "method": fc["method"], "suggested_order": None,
+                "warnings": fc["warnings"]}
+
+    safety = total * SAFETY_RATIO
+    need = total + safety - current_stock
+    return {
+        "product_id": product_id,
+        "method": fc["method"],
+        "expected_sales_7_days": total,
+        "safety_stock": round(safety, 2),
+        "current_stock": current_stock,
+        "suggested_order": max(0, math.ceil(need)),
+        "warnings": fc["warnings"],
+    }
+
+
+def waste_risk(bundle: dict | None, product_id: int, current_stock: float, shelf_life_days: int) -> dict:
+    """Ne kadarı fire olur? = elimdeki stok - bozulmadan önce satılabilecek miktar"""
+    fc = forecast(bundle, product_id)
+    if fc["total_next_7_days"] is None:
+        return {"product_id": product_id, "method": fc["method"], "units_at_risk": None,
+                "risk_level": None, "warnings": fc["warnings"]}
+
+    daily = [d["units"] for d in fc["forecast"]]
+    if shelf_life_days <= len(daily):
+        sellable = sum(daily[:shelf_life_days])
+    else:
+        sellable = sum(daily) / len(daily) * shelf_life_days
+
+    at_risk = max(0.0, current_stock - sellable)
+    ratio = at_risk / current_stock if current_stock > 0 else 0
+    if ratio == 0:
+        level = "none"
+    elif ratio < 0.1:
+        level = "low"
+    elif ratio < 0.3:
+        level = "medium"
+    else:
+        level = "high"
+
+    return {
+        "product_id": product_id,
+        "method": fc["method"],
+        "current_stock": current_stock,
+        "shelf_life_days": shelf_life_days,
+        "sellable_before_expiry": round(sellable, 2),
+        "units_at_risk": round(at_risk, 2),
+        "risk_level": level,
+        "warnings": fc["warnings"],
     }
