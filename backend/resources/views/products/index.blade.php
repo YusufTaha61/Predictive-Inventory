@@ -47,6 +47,7 @@
                                         <td class="py-2">{{ number_format($product->price, 2, ',', '.') }} ₺</td>
                                         <td class="py-2">{{ $product->shelf_life_days ? $product->shelf_life_days.' gün' : '-' }}</td>
                                         <td class="py-2 text-right">
+                                            <a href="{{ route('products.forecast', $product) }}" class="text-indigo-600 hover:underline mr-3">Tahmin</a>
                                             <a href="{{ route('products.edit', $product) }}" class="text-indigo-600 hover:underline">Düzenle</a>
                                             <form method="POST" action="{{ route('products.destroy', $product) }}" class="inline">
                                                 @csrf
