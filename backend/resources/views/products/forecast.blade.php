@@ -100,7 +100,7 @@
                     <p class="stat-value text-ink-muted">—</p>
                     <p class="stat-note">Raf ömrü girilmemiş, fire riski hesaplanamıyor.</p>
                 @elseif (isset($waste['risk_level']))
-                    @php($risk = $riskLabels[$waste['risk_level']] ?? [$waste['risk_level'], 'text-ink'])
+                    @php $risk = $riskLabels[$waste['risk_level']] ?? [$waste['risk_level'], 'text-ink']; @endphp
                     <p class="stat-value {{ $risk[1] }}">{{ $risk[0] }}</p>
                     <p class="stat-note">
                         Tarihi geçmeden satılamayacak tahmini miktar:
