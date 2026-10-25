@@ -39,6 +39,15 @@ class Product extends Model
         return $this->hasMany(StockMovement::class);
     }
 
+    
+    /**
+     * Bir ürünün birden çok kampanyası olabilir.
+     */
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
     /**
      * Mevcut stok = girişler - (satışlar + fireler)
      */

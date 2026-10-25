@@ -32,4 +32,13 @@ class Company extends Model
     {
         return $this->hasMany(StockMovement::class);
     }
+
+    
+    /**
+     * Bir şirketin birden çok kampanyası olabilir.
+     */
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class);
+    }
 }
