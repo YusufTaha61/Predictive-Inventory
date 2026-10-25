@@ -78,7 +78,13 @@
                         <div class="flex items-center gap-3 py-1">
                             <div class="w-24 text-sm text-gray-600">{{ \Carbon\Carbon::parse($day['date'])->format('d.m.Y') }}</div>
                             <div class="flex-1 bg-gray-100 rounded h-5">
-                                <div class="bg-indigo-500 h-5 rounded" @style(['width: ' . ($day['units'] / $maxUnits * 100) . '%'])></div>
+                                {{-- Kampanya günleri turuncu gösterilir --}}
+                                <div class="{{ ($day['on_promo'] ?? false) ? 'bg-orange-400' : 'bg-indigo-500' }} h-5 rounded" @style(['width: ' . ($day['units'] / $maxUnits * 100) . '%'])></div>
+                            </div>
+                            <div class="w-20 text-xs">
+                                @if ($day['on_promo'] ?? false)
+                                    <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-800">Kampanya</span>
+                                @endif
                             </div>
                             <div class="w-16 text-right text-sm">{{ $day['units'] }}</div>
                         </div>
@@ -86,11 +92,16 @@
                         <div class="text-gray-400 text-sm">Tahmin yok</div>
                     @endforelse
 
-                    @if ($forecast['total_next_7_days'] !== null)
-                        <div class="mt-4 pt-3 border-t text-sm">
-                            Toplam: <strong>{{ $forecast['total_next_7_days'] }} {{ $product->unit }}</strong>
+                    <div class="mt-4 pt-3 border-t text-sm flex justify-between items-center gap-3">
+                        <div>
+                            @if ($forecast['total_next_7_days'] !== null)
+                                Toplam: <strong>{{ $forecast['total_next_7_days'] }} {{ $product->unit }}</strong>
+                            @endif
                         </div>
-                    @endif
+                        <a href="{{ route('promotions.create', ['product_id' => $product->id]) }}" class="text-indigo-600 hover:underline">
+                            Bu ürüne kampanya ekle
+                        </a>
+                    </div>
                 </div>
             @endif
         </div>

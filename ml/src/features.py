@@ -3,11 +3,13 @@
 Tahmin ufku 7 gün. Bu yüzden geçmiş satışa dayanan her özellik en az 7 gün geriden gelir:
 d gününün tahmini, d-7 gününe kadar bilinen satışlarla yapılır. Böylece model bugün,
 önümüzdeki 7 günün hepsini tahmin edebilir.
-Takvim bilgileri (haftanın günü, ay, bayram) önceden bilindiği için serbestçe kullanılır.
+Takvim bilgileri (haftanın günü, ay, bayram) ve kampanyalar önceden bilindiği için serbestçe kullanılır.
 """
 from __future__ import annotations
 
 import pandas as pd
+
+from .data import promo_days
 
 HORIZON = 7  # kaç gün ilerisi tahmin ediliyor
 
@@ -32,6 +34,8 @@ FEATURES = [
     "roll_mean_28",
     # Takvim
     "dow", "month", "day_of_year", "is_weekend", "is_holiday",
+    # Kampanya: o gün kampanya var mı, fiyat normalin yüzde kaçı (1 = indirim yok, 0.8 = %20 indirim)
+    "on_promo", "price_ratio",
     # Ürün bilgisi
     "shelf_life_days", "price", "product_code",
 ]
@@ -47,12 +51,14 @@ BASELINES = {
 MIN_HISTORY_DAYS = 28 + HORIZON
 
 
-def build_features(sales: pd.DataFrame, products: pd.DataFrame, product_ids: list[int] | None = None):
+def build_features(sales: pd.DataFrame, products: pd.DataFrame, product_ids: list[int] | None = None,
+                   promotions: pd.DataFrame | None = None):
     """Özellik tablosunu ve modelin tanıdığı ürün listesini döndürür.
 
     sales     : date, product_id, units_sold (gelecek günlerde units_sold boş olabilir)
     products  : product_id, shelf_life_days, price
     product_ids: tahmin sırasında eğitimdeki ürün listesi verilir; eğitimde boş bırakılır.
+    promotions: data.load_promotions() sonucu; boşsa hiç kampanya yok sayılır.
     """
     df = sales.merge(products[["product_id", "shelf_life_days", "price"]], on="product_id", how="left")
     df = df.sort_values(["product_id", "date"]).reset_index(drop=True)
@@ -82,6 +88,9 @@ def build_features(sales: pd.DataFrame, products: pd.DataFrame, product_ids: lis
     df["is_weekend"] = (d.dayofweek >= 5).astype(int)
     df["is_holiday"] = df["date"].isin(HOLIDAYS).astype(int)
 
+    # Kampanya günleri
+    df = add_promotions(df, promotions)
+
     # Raf ömrü girilmemişse 0 (bilinmiyor / bozulmaz)
     df["shelf_life_days"] = df["shelf_life_days"].fillna(0)
     df["price"] = df["price"].astype(float)
@@ -92,3 +101,17 @@ def build_features(sales: pd.DataFrame, products: pd.DataFrame, product_ids: lis
     df["product_code"] = pd.Categorical(df["product_id"], categories=product_ids).codes
 
     return df, product_ids
+
+
+def add_promotions(df: pd.DataFrame, promotions: pd.DataFrame | None) -> pd.DataFrame:
+    """Tabloya on_promo ve price_ratio sütunlarını ekler (kampanya olmayan gün: 0 ve 1)."""
+    df = df.drop(columns=["on_promo", "price_ratio"], errors="ignore")
+    days = promo_days(promotions) if promotions is not None else promo_days(pd.DataFrame())
+    if days.empty:
+        df["on_promo"] = 0
+        df["price_ratio"] = 1.0
+        return df
+    df = df.merge(days, on=["date", "product_id"], how="left")
+    df["on_promo"] = df["on_promo"].fillna(0).astype(int)
+    df["price_ratio"] = df["price_ratio"].fillna(1.0).astype(float)
+    return df

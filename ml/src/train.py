@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
 
-from .data import ML_DIR, load_daily_sales, load_products
+from .data import ML_DIR, load_daily_sales, load_products, load_promotions
 from .features import BASELINES, FEATURES, HORIZON, MIN_HISTORY_DAYS, build_features
 
 MODEL_PATH = ML_DIR / "models" / "forecast_model.joblib"
@@ -46,9 +46,12 @@ def get_models() -> dict:
     }
 
 
-def predict_units(model, rows: pd.DataFrame) -> np.ndarray:
-    """Model oran tahmin eder; seviyeyle çarpılınca adet olur. Satış eksi olamaz."""
-    return np.clip(model.predict(rows[FEATURES]), 0, None) * rows["level"].to_numpy()
+def predict_units(model, rows: pd.DataFrame, features: list[str] = FEATURES) -> np.ndarray:
+    """Model oran tahmin eder; seviyeyle çarpılınca adet olur. Satış eksi olamaz.
+
+    features: modelin eğitildiği özellik listesi (eski bir model dosyası daha az özellikle eğitilmiş olabilir).
+    """
+    return np.clip(model.predict(rows[features]), 0, None) * rows["level"].to_numpy()
 
 
 def time_folds(df: pd.DataFrame, n_folds: int = 3, fold_days: int = 60):
@@ -65,14 +68,16 @@ def time_folds(df: pd.DataFrame, n_folds: int = 3, fold_days: int = 60):
 def main() -> None:
     sales = load_daily_sales()
     products = load_products()
-    df, product_ids = build_features(sales, products)
+    promotions = load_promotions()
+    df, product_ids = build_features(sales, products, promotions=promotions)
     # İlk 35 günün özellikleri eksik (yeterli geçmiş yok), onlar eğitimde kullanılmaz
     df = df.dropna(subset=["lag_28", "roll_std_28"]).reset_index(drop=True)
     if df.empty:
         raise SystemExit(f"Eğitim için yeterli veri yok: en az {MIN_HISTORY_DAYS} günlük satış gerekli.")
 
     print(f"Eğitim tablosu: {len(df):,} satır, {len(product_ids)} ürün, "
-          f"{df['date'].min().date()} - {df['date'].max().date()}")
+          f"{df['date'].min().date()} - {df['date'].max().date()}, "
+          f"{int(df['on_promo'].sum()):,} kampanya günü")
 
     rows = []
     for fold, train, test in time_folds(df):

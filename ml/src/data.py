@@ -84,3 +84,39 @@ def load_daily_sales(product_id: int | None = None) -> pd.DataFrame:
     full = full.merge(sales, on=["date", "product_id"], how="left")
     full["units_sold"] = full["units_sold"].fillna(0).astype(float)
     return full.sort_values(["product_id", "date"]).reset_index(drop=True)
+
+
+def load_promotions(product_id: int | None = None) -> pd.DataFrame:
+    """Kampanyalar: product_id, starts_on, ends_on, discount_percent.
+
+    Laravel'deki promotions tablosundan okunur. Tablo henüz yoksa (migrate yapılmamışsa) boş döner.
+    """
+    columns = ["product_id", "starts_on", "ends_on", "discount_percent"]
+    only_one = "" if product_id is None else "WHERE product_id = ?"
+    params: tuple = () if product_id is None else (product_id,)
+    with _connect() as con:
+        exists = con.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'promotions'").fetchone()
+        if not exists:
+            return pd.DataFrame(columns=columns)
+        promos = pd.read_sql_query(
+            f"""SELECT product_id, date(starts_on) AS starts_on, date(ends_on) AS ends_on, discount_percent
+                FROM promotions {only_one}""",
+            con, params=params,
+        )
+    promos["starts_on"] = pd.to_datetime(promos["starts_on"])
+    promos["ends_on"] = pd.to_datetime(promos["ends_on"])
+    return promos
+
+
+def promo_days(promos: pd.DataFrame) -> pd.DataFrame:
+    """Kampanyaları gün gün açar: date, product_id, on_promo (1), price_ratio (indirimli fiyat / normal fiyat)."""
+    rows = []
+    for p in promos.itertuples():
+        discount = 0.0 if pd.isna(p.discount_percent) else float(p.discount_percent)
+        for day in pd.date_range(p.starts_on, p.ends_on, freq="D"):
+            rows.append({"date": day, "product_id": p.product_id, "on_promo": 1, "price_ratio": 1 - discount / 100})
+    if not rows:
+        return pd.DataFrame(columns=["date", "product_id", "on_promo", "price_ratio"])
+    # Aynı güne iki kampanya düşerse (Laravel bunu engelliyor ama) en büyük indirim geçerli
+    return pd.DataFrame(rows).groupby(["date", "product_id"], as_index=False).agg(
+        on_promo=("on_promo", "max"), price_ratio=("price_ratio", "min"))
