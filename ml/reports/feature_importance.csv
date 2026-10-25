@@ -1,0 +1,19 @@
+feature,name,importance,share_pct
+price_ratio,İndirim oranı,0.0215,54.4526
+on_promo,Kampanya var mı,0.006,15.1348
+roll_std_28_ratio,Satış dalgalanması,0.0043,10.835
+roll_mean_7_ratio,Son 7 günün ortalaması,0.0027,6.9475
+product_code,Ürün,0.001,2.5918
+dow,Haftanın günü,0.0009,2.3551
+roll_mean_28,Ürünün normal satış seviyesi,0.0008,2.1069
+price,Fiyat,0.0007,1.8814
+is_weekend,Hafta sonu,0.0006,1.4956
+lag_28_ratio,4 hafta önce aynı gün,0.0006,1.4397
+shelf_life_days,Raf ömrü,0.0002,0.6181
+day_of_year,Yılın günü (mevsim),0.0,0.0871
+month,Ay,0.0,0.0542
+is_holiday,Bayram,0.0,0.0
+lag_21_ratio,3 hafta önce aynı gün,-0.0002,0.0
+lag_7_ratio,Geçen hafta aynı gün,-0.0002,0.0
+dow_mean_4_ratio,Son 4 haftada aynı günün ort.,-0.0003,0.0
+lag_14_ratio,2 hafta önce aynı gün,-0.0006,0.0

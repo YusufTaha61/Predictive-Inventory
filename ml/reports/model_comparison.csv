@@ -1,0 +1,6 @@
+model,kind,mae,wape,bias
+Random Forest,ml,2.9,19.0,1.1
+Gradient Boosting,ml,2.9,19.0,0.3
+Son 28 günün ortalaması,basit,3.36,21.9,-0.2
+Son 4 haftada aynı günün ortalaması,basit,3.47,22.7,-0.2
+Geçen hafta aynı gün,basit,4.25,27.8,-0.1
