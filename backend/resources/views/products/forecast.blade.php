@@ -1,109 +1,161 @@
 @php
     $methodLabels = [
         'ml' => 'Makine öğrenmesi modeli',
-        'seasonal_average' => 'Son 4 haftanın ortalaması',
-        'history_average' => 'Geçmiş günlerin ortalaması',
+        'seasonal_average' => 'Son 4 haftanın aynı günlerinin ortalaması',
+        'history_average' => 'Mevcut satış günlerinin ortalaması',
         'no_data' => 'Veri yok',
     ];
     $riskLabels = [
-        'none' => ['Yok', 'bg-green-100 text-green-800'],
-        'low' => ['Düşük', 'bg-green-100 text-green-800'],
-        'medium' => ['Orta', 'bg-yellow-100 text-yellow-800'],
-        'high' => ['Yüksek', 'bg-red-100 text-red-800'],
+        'none' => ['Yok', 'text-leaf-700'],
+        'low' => ['Düşük', 'text-leaf-700'],
+        'medium' => ['Orta', 'text-mustard-700'],
+        'high' => ['Yüksek', 'text-tomato-700'],
     ];
+    $dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    $shortDayNames = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+
+    // 1,50 → 1,5 ; 2,00 → 2
+    $qty = fn ($value) => rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
+
     $days = $forecast['forecast'] ?? [];
     $maxUnits = collect($days)->max('units') ?: 1;
+    $hasPromo = collect($days)->contains('on_promo', true);
 @endphp
 
 <x-app-layout>
+    <x-slot name="title">Tahmin: {{ $product->name }}</x-slot>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ $product->name }} — Tahmin
-        </h2>
+        <x-page-header :title="$product->name" subtitle="Satış tahmini, sipariş önerisi ve fire riski.">
+            <a href="{{ route('promotions.create', ['product_id' => $product->id]) }}" class="btn-secondary">Kampanya ekle</a>
+            <a href="{{ route('products.index') }}" class="btn-secondary">Ürünlere dön</a>
+        </x-page-header>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    @if (isset($forecast['error']))
+        <div class="alert-warning" role="alert">
+            <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.3 3.1a2 2 0 0 1 3.4 0l6 10.4A2 2 0 0 1 16 16.5H4a2 2 0 0 1-1.7-3l6-10.4ZM10 7a.9.9 0 0 0-.9.9v3a.9.9 0 1 0 1.8 0v-3A.9.9 0 0 0 10 7Zm0 7.2a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/></svg>
+            <span>{{ $forecast['error'] }}</span>
+        </div>
+    @else
+        @foreach ($forecast['warnings'] ?? [] as $warning)
+            <div class="alert-warning" role="status">
+                <svg class="mt-0.5 h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm-.9 4.5a.9.9 0 1 1 1.8 0v4a.9.9 0 1 1-1.8 0v-4Zm.9 7.9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/></svg>
+                <span>{{ ucfirst($warning) }}</span>
+            </div>
+        @endforeach
 
-            <a href="{{ route('products.index') }}" class="text-sm text-gray-600 hover:underline">← Ürünlere dön</a>
-
-            @if (isset($forecast['error']))
-                <div class="p-4 bg-red-100 text-red-800 rounded">{{ $forecast['error'] }}</div>
-            @else
-                @foreach ($forecast['warnings'] ?? [] as $warning)
-                    <div class="p-3 bg-yellow-100 text-yellow-800 rounded text-sm">{{ $warning }}</div>
-                @endforeach
-
-                {{-- Özet kartları --}}
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-white p-5 rounded-lg shadow-sm">
-                        <div class="text-sm text-gray-500">Mevcut stok</div>
-                        <div class="text-2xl font-semibold">{{ $stock }} {{ $product->unit }}</div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-lg shadow-sm">
-                        <div class="text-sm text-gray-500">Önerilen sipariş</div>
-                        @if (isset($order['suggested_order']))
-                            <div class="text-2xl font-semibold">{{ $order['suggested_order'] }} {{ $product->unit }}</div>
-                            <div class="text-xs text-gray-500 mt-1">7 günlük satış + %20 yedek − stok</div>
-                        @else
-                            <div class="text-gray-400">{{ $order['error'] ?? 'Hesaplanamadı' }}</div>
-                        @endif
-                    </div>
-
-                    <div class="bg-white p-5 rounded-lg shadow-sm">
-                        <div class="text-sm text-gray-500">Fire riski</div>
-                        @if ($waste === null)
-                            <div class="text-gray-400 text-sm">Raf ömrü girilmemiş</div>
-                        @elseif (isset($waste['risk_level']))
-                            @php [$label, $color] = $riskLabels[$waste['risk_level']]; @endphp
-                            <span class="inline-block px-2 py-1 rounded text-sm font-semibold {{ $color }}">{{ $label }}</span>
-                            <div class="text-xs text-gray-500 mt-1">
-                                {{ $waste['units_at_risk'] }} {{ $product->unit }} bozulmadan satılamayabilir
-                            </div>
-                        @else
-                            <div class="text-gray-400">{{ $waste['error'] ?? 'Hesaplanamadı' }}</div>
-                        @endif
-                    </div>
+        <div class="grid gap-6 lg:grid-cols-3">
+            {{-- Öne çıkan karar: sipariş önerisi --}}
+            <div class="card overflow-hidden lg:col-span-1">
+                <div class="bg-leaf-500 p-6 text-white">
+                    <p class="text-sm text-white/80">Sipariş önerisi</p>
+                    @if (isset($order['suggested_order']))
+                        <p class="mt-2 font-display text-5xl font-semibold tracking-tight tabular-nums">{{ number_format($order['suggested_order'], 0, ',', '.') }}</p>
+                        <p class="mt-1 text-white/85">{{ $product->unit }} sipariş ver</p>
+                    @else
+                        <p class="mt-2 font-display text-2xl font-semibold">Hesaplanamadı</p>
+                        <p class="mt-1 text-white/85">{{ $order['error'] ?? 'Yeterli veri yok' }}</p>
+                    @endif
                 </div>
-
-                {{-- 7 günlük tahmin --}}
-                <div class="bg-white p-5 rounded-lg shadow-sm">
-                    <div class="flex justify-between items-baseline mb-4">
-                        <h3 class="font-semibold">Önümüzdeki 7 gün</h3>
-                        <span class="text-xs text-gray-500">Yöntem: {{ $methodLabels[$forecast['method']] ?? $forecast['method'] }}</span>
+                <dl class="divide-y divide-line text-sm">
+                    <div class="flex justify-between px-6 py-3">
+                        <dt class="text-ink-muted">Elindeki stok</dt>
+                        <dd class="font-medium tabular-nums">{{ $qty($stock) }} {{ $product->unit }}</dd>
                     </div>
+                    <div class="flex justify-between px-6 py-3">
+                        <dt class="text-ink-muted">Hesap</dt>
+                        <dd class="font-medium">7 günlük satış + %20 yedek − stok</dd>
+                    </div>
+                </dl>
+            </div>
 
-                    @forelse ($days as $day)
-                        <div class="flex items-center gap-3 py-1">
-                            <div class="w-24 text-sm text-gray-600">{{ \Carbon\Carbon::parse($day['date'])->format('d.m.Y') }}</div>
-                            <div class="flex-1 bg-gray-100 rounded h-5">
-                                {{-- Kampanya günleri turuncu gösterilir --}}
-                                <div class="{{ ($day['on_promo'] ?? false) ? 'bg-orange-400' : 'bg-indigo-500' }} h-5 rounded" @style(['width: ' . ($day['units'] / $maxUnits * 100) . '%'])></div>
+            <div class="card card-body">
+                <p class="stat-label">Önümüzdeki 7 gün beklenen satış</p>
+                @if ($forecast['total_next_7_days'] !== null)
+                    <p class="stat-value">{{ $qty($forecast['total_next_7_days']) }} <span class="text-lg font-medium text-ink-muted">{{ $product->unit }}</span></p>
+                    <p class="stat-note">Günde ortalama {{ number_format($forecast['total_next_7_days'] / 7, 1, ',', '.') }}</p>
+                @else
+                    <p class="stat-value text-ink-muted">—</p>
+                    <p class="stat-note">Bu ürünün henüz satışı yok.</p>
+                @endif
+            </div>
+
+            <div class="card card-body">
+                <p class="stat-label">Fire riski (eldeki stok)</p>
+                @if ($waste === null)
+                    <p class="stat-value text-ink-muted">—</p>
+                    <p class="stat-note">Raf ömrü girilmemiş, fire riski hesaplanamıyor.</p>
+                @elseif (isset($waste['risk_level']))
+                    @php($risk = $riskLabels[$waste['risk_level']] ?? [$waste['risk_level'], 'text-ink'])
+                    <p class="stat-value {{ $risk[1] }}">{{ $risk[0] }}</p>
+                    <p class="stat-note">
+                        Tarihi geçmeden satılamayacak tahmini miktar:
+                        <span class="font-medium text-ink">{{ $qty($waste['units_at_risk']) }} {{ $product->unit }}</span>
+                    </p>
+                @else
+                    <p class="stat-value text-ink-muted">—</p>
+                    <p class="stat-note">{{ $waste['error'] ?? 'Hesaplanamadı' }}</p>
+                @endif
+            </div>
+        </div>
+
+        {{-- Günlük satış tahmini --}}
+        <div class="card card-body">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="card-title">Günlük satış tahmini</h2>
+                <div class="flex gap-4 text-sm text-ink-soft">
+                    <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-leaf-500"></span>Normal gün</span>
+                    <span class="flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-mustard-500"></span>Kampanya günü</span>
+                </div>
+            </div>
+
+            @if (empty($days))
+                <x-empty-state title="Tahmin yok" text="Bu ürünün stok hareketi girilince tahmin burada görünür." />
+            @else
+                <div class="mt-6 grid grid-cols-7 gap-2 sm:gap-4">
+                    @foreach ($days as $day)
+                        @php
+                            $date = \Illuminate\Support\Carbon::parse($day['date']);
+                            $isPromo = $day['on_promo'] ?? false;
+                        @endphp
+                        <div class="flex flex-col items-center" title="{{ $date->format('d.m.Y') }} {{ $dayNames[$date->dayOfWeek] }}: {{ number_format($day['units'], 1, ',', '.') }} {{ $product->unit }}">
+                            <span class="text-sm font-medium tabular-nums">{{ number_format($day['units'], 0, ',', '.') }}</span>
+                            <div class="mt-1.5 flex h-44 w-full items-end">
+                                <div class="w-full rounded-t-md {{ $isPromo ? 'bg-mustard-500' : 'bg-leaf-500' }}"
+                                     style="height: {{ max(2, round(100 * $day['units'] / $maxUnits)) }}%"></div>
                             </div>
-                            <div class="w-20 text-xs">
-                                @if ($day['on_promo'] ?? false)
-                                    <span class="px-2 py-0.5 rounded bg-orange-100 text-orange-800">Kampanya</span>
+                            <div class="w-full border-t border-line pt-2 text-center">
+                                <p class="text-xs font-medium sm:text-sm">
+                                    <span class="sm:hidden">{{ $shortDayNames[$date->dayOfWeek] }}</span>
+                                    <span class="hidden sm:inline">{{ $dayNames[$date->dayOfWeek] }}</span>
+                                </p>
+                                <p class="text-xs tabular-nums text-ink-muted">{{ $date->format('d.m') }}</p>
+                                @if ($isPromo)
+                                    <p class="mt-1 hidden text-xs font-medium text-mustard-700 sm:block">Kampanya</p>
                                 @endif
                             </div>
-                            <div class="w-16 text-right text-sm">{{ $day['units'] }}</div>
                         </div>
-                    @empty
-                        <div class="text-gray-400 text-sm">Tahmin yok</div>
-                    @endforelse
-
-                    <div class="mt-4 pt-3 border-t text-sm flex justify-between items-center gap-3">
-                        <div>
-                            @if ($forecast['total_next_7_days'] !== null)
-                                Toplam: <strong>{{ $forecast['total_next_7_days'] }} {{ $product->unit }}</strong>
-                            @endif
-                        </div>
-                        <a href="{{ route('promotions.create', ['product_id' => $product->id]) }}" class="text-indigo-600 hover:underline">
-                            Bu ürüne kampanya ekle
-                        </a>
-                    </div>
+                    @endforeach
                 </div>
             @endif
+
+            <div class="mt-6 space-y-1 border-t border-line pt-4 text-sm text-ink-muted">
+                <p>
+                    Yöntem: <span class="font-medium text-ink">{{ $methodLabels[$forecast['method']] ?? $forecast['method'] }}</span>.
+                    @if (! empty($days))
+                        {{ \Illuminate\Support\Carbon::parse($days[0]['date'])->subDay()->format('d.m.Y') }} tarihine kadarki satışlar kullanıldı.
+                    @endif
+                </p>
+                @if ($hasPromo)
+                    <p>Sarı günlerde kampanya var; tahmin bu günlerde satışın artacağını hesaba kattı.</p>
+                @endif
+                @if ($forecast['method'] !== 'ml' && ! empty($days))
+                    <p>
+                        Bu ürün için makine öğrenmesi modeli kullanılamadı (ürün yeni ya da model bu ürünü henüz tanımıyor).
+                        Modeli güncel veriyle yeniden eğitince (php artisan ml:train) bu ürün de modele dahil olur.
+                    </p>
+                @endif
+            </div>
         </div>
-    </div>
+    @endif
 </x-app-layout>

@@ -1,74 +1,73 @@
+@php
+    // 1,50 → 1,5 ; 2,00 → 2
+    $qty = fn ($value) => rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
+@endphp
+
 <x-app-layout>
+    <x-slot name="title">Ürünler</x-slot>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Ürünler</h2>
-            <a href="{{ route('products.create') }}">
-                <x-primary-button type="button">Yeni Ürün</x-primary-button>
+        <x-page-header title="Ürünler" subtitle="Ürünlerini ekle, düzenle ve her biri için satış tahminine bak.">
+            <a href="{{ route('products.create') }}" class="btn-primary">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1Z"/></svg>
+                Yeni ürün
             </a>
-        </div>
+        </x-page-header>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if (session('status'))
-                <div class="mb-4 p-4 bg-green-100 text-green-800 rounded-md">{{ session('status') }}</div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    @if ($products->isEmpty())
-                        <p>Henüz ürün yok. "Yeni Ürün" ile ilk ürününü ekle.</p>
-                    @else
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="border-b">
-                                    <th class="py-2">Ad</th>
-                                    <th class="py-2">Stok Kodu</th>
-                                    <th class="py-2">Birim</th>
-                                    <th class="py-2">Mevcut Stok</th>
-                                    <th class="py-2">Fiyat</th>
-                                    <th class="py-2">Raf Ömrü</th>
-                                    <th class="py-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($products as $product)
-                                    <tr class="border-b">
-                                        <td class="py-2">{{ $product->name }}</td>
-                                        <td class="py-2">{{ $product->sku ?? '-' }}</td>
-                                        <td class="py-2">{{ ucfirst($product->unit) }}</td>
-                                        @php
-                                            // Mevcut stok = girişler - (satışlar + fireler)
-                                            $stock = (float) $product->stock_in - (float) $product->stock_out;
-                                        @endphp
-                                        <td class="py-2 {{ $stock <= 0 ? 'text-red-600 font-semibold' : '' }}">
-                                            {{ rtrim(rtrim(number_format($stock, 2, ',', '.'), '0'), ',') }} {{ ucfirst($product->unit) }}
-                                        </td>
-                                        <td class="py-2">{{ number_format($product->price, 2, ',', '.') }} ₺</td>
-                                        <td class="py-2">{{ $product->shelf_life_days ? $product->shelf_life_days.' gün' : '-' }}</td>
-                                        <td class="py-2">
-                                            <div class="flex justify-end items-center gap-2">
-                                                <a href="{{ route('products.forecast', $product) }}"
-                                                class="px-3 py-1 rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-medium hover:bg-indigo-100">Tahmin</a>
-                                                <a href="{{ route('products.edit', $product) }}"
-                                                class="px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-700 text-xs font-medium hover:bg-gray-100">Düzenle</a>
-                                                <form method="POST" action="{{ route('products.destroy', $product) }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                            class="px-3 py-1 rounded-md border border-red-200 bg-red-50 text-red-700 text-xs font-medium hover:bg-red-100">Sil</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-
-                        <div class="mt-4">{{ $products->links() }}</div>
-                    @endif
-                </div>
+    <div class="card">
+        @if ($products->isEmpty())
+            <x-empty-state title="Henüz ürün eklenmedi" text="Ürün ekleyince stok hareketlerini girebilir ve satış tahmini alabilirsin.">
+                <a href="{{ route('products.create') }}" class="btn-primary">İlk ürününü ekle</a>
+            </x-empty-state>
+        @else
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th>Birim</th>
+                            <th class="num">Raf ömrü</th>
+                            <th class="num">Fiyat</th>
+                            <th class="num">Stok</th>
+                            <th class="num"><span class="sr-only">İşlemler</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($products as $product)
+                            @php
+                                // Mevcut stok = girişler - (satışlar + fireler)
+                                $stock = (float) $product->stock_in - (float) $product->stock_out;
+                            @endphp
+                            <tr>
+                                <td>
+                                    <p class="font-medium">{{ $product->name }}</p>
+                                    <p class="text-xs text-ink-muted">{{ $product->sku ?? 'Stok kodu yok' }}</p>
+                                </td>
+                                <td><span class="badge-gray">{{ ucfirst($product->unit) }}</span></td>
+                                <td class="num text-ink-soft">{{ $product->shelf_life_days ? $product->shelf_life_days.' gün' : '—' }}</td>
+                                <td class="num">{{ number_format($product->price, 2, ',', '.') }} ₺</td>
+                                <td class="num font-medium {{ $stock <= 0 ? 'text-tomato-600' : '' }}">{{ $qty($stock) }}</td>
+                                <td class="num">
+                                    <div class="flex items-center justify-end gap-4 whitespace-nowrap">
+                                        <a href="{{ route('products.forecast', $product) }}" class="btn-secondary px-3 py-1.5 text-xs">Tahmin</a>
+                                        <a href="{{ route('products.edit', $product) }}" class="action-link">Düzenle</a>
+                                        <form action="{{ route('products.destroy', $product) }}" method="POST"
+                                              onsubmit="return confirm('Bu ürünü silmek istediğine emin misin?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="action-link-danger">Sil</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        </div>
+
+            @if ($products->hasPages())
+                <div class="border-t border-line px-4 py-3">{{ $products->links() }}</div>
+            @endif
+        @endif
     </div>
 </x-app-layout>

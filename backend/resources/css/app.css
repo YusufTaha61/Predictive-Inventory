@@ -1,3 +1,150 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Ortak görünüm sınıfları.
+ * Sayfalarda uzun Tailwind sınıf listeleri yerine bunlar kullanılır,
+ * böylece renk/boşluk değişince tek yerden değişir.
+ */
+
+@layer base {
+    body {
+        @apply bg-canvas text-ink;
+    }
+
+    h1, h2, h3 {
+        @apply font-display;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* Sayfa başlığı */
+    .page-title {
+        @apply font-display text-2xl font-semibold tracking-tight text-ink;
+    }
+    .page-subtitle {
+        @apply mt-1 text-sm text-ink-muted;
+    }
+
+    /* Kutular */
+    .card {
+        @apply rounded-xl border border-line bg-white shadow-card;
+    }
+    .card-body {
+        @apply p-5 sm:p-6;
+    }
+    .card-title {
+        @apply font-display text-base font-semibold text-ink;
+    }
+
+    /* Butonlar */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-leaf-400 focus-visible:ring-offset-2
+               disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .btn-primary {
+        @apply btn bg-leaf-500 text-white hover:bg-leaf-600 active:bg-leaf-700;
+    }
+    .btn-secondary {
+        @apply btn border border-line bg-white text-ink hover:border-leaf-300 hover:bg-leaf-50;
+    }
+    .btn-danger {
+        @apply btn bg-tomato-500 text-white hover:bg-tomato-600 focus-visible:ring-tomato-500;
+    }
+
+    /* Tablo içi küçük işlem linkleri */
+    .action-link {
+        @apply rounded text-sm font-medium text-leaf-600 hover:text-leaf-800 hover:underline
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-leaf-400;
+    }
+    .action-link-danger {
+        @apply rounded text-sm font-medium text-tomato-600 hover:text-tomato-700 hover:underline
+               focus:outline-none focus-visible:ring-2 focus-visible:ring-tomato-500;
+    }
+    .text-link {
+        @apply font-medium text-leaf-600 underline decoration-leaf-200 underline-offset-2 hover:decoration-leaf-500;
+    }
+
+    /* Form alanları */
+    .field-label {
+        @apply block text-sm font-medium text-ink;
+    }
+    .field-input {
+        @apply rounded-lg border-line bg-white text-ink shadow-sm placeholder:text-ink-muted/60
+               focus:border-leaf-400 focus:ring-leaf-400;
+    }
+    .field-hint {
+        @apply mt-1.5 text-sm text-ink-muted;
+    }
+
+    /* Tablolar */
+    .data-table {
+        @apply w-full text-left text-sm;
+    }
+    .data-table thead th {
+        @apply border-b border-line bg-canvas/60 px-4 py-2.5 text-xs font-medium text-ink-muted first:pl-5 last:pr-5 sm:first:pl-6 sm:last:pr-6;
+    }
+    .data-table tbody td {
+        @apply border-b border-line/70 px-4 py-3 align-middle first:pl-5 last:pr-5 sm:first:pl-6 sm:last:pr-6;
+    }
+    .data-table tbody tr:last-child td {
+        @apply border-b-0;
+    }
+    .data-table tbody tr {
+        @apply transition-colors hover:bg-leaf-50/40;
+    }
+    .num {
+        @apply text-right tabular-nums;
+    }
+
+    /* Etiketler */
+    .badge {
+        @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium;
+    }
+    .badge-green {
+        @apply badge bg-leaf-100 text-leaf-800;
+    }
+    .badge-red {
+        @apply badge bg-tomato-100 text-tomato-700;
+    }
+    .badge-yellow {
+        @apply badge bg-mustard-100 text-mustard-700;
+    }
+    .badge-ink {
+        @apply badge bg-ink/10 text-ink;
+    }
+    .badge-gray {
+        @apply badge bg-canvas text-ink-muted ring-1 ring-inset ring-line;
+    }
+
+    /* Bilgi kutuları */
+    .alert {
+        @apply flex items-start gap-3 rounded-xl border px-4 py-3 text-sm;
+    }
+    .alert-success {
+        @apply alert border-leaf-200 bg-leaf-50 text-leaf-800;
+    }
+    .alert-error {
+        @apply alert border-tomato-200 bg-tomato-50 text-tomato-700;
+    }
+    .alert-warning {
+        @apply alert border-mustard-400/40 bg-mustard-50 text-mustard-700;
+    }
+
+    /* Panel özet sayıları */
+    .stat-label {
+        @apply text-sm text-ink-muted;
+    }
+    .stat-value {
+        @apply mt-2 font-display text-3xl font-semibold tracking-tight tabular-nums text-ink;
+    }
+    .stat-note {
+        @apply mt-1 text-sm text-ink-muted;
+    }
+}

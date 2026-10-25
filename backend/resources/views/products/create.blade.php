@@ -1,15 +1,16 @@
 <x-app-layout>
+    <x-slot name="title">Yeni ürün</x-slot>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Yeni Ürün</h2>
+        <x-page-header title="Yeni ürün" subtitle="Ürünün bilgilerini gir. Stoğu sonra Stok Hareketleri sayfasından eklersin.">
+            <a href="{{ route('products.index') }}" class="btn-secondary">Ürünlere dön</a>
+        </x-page-header>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <form method="POST" action="{{ route('products.store') }}" class="p-6">
-                    @include('products._form')
-                </form>
-            </div>
+    <div class="max-w-2xl">
+        <div class="card card-body">
+            <form method="POST" action="{{ route('products.store') }}">
+                @include('products._form')
+            </form>
         </div>
     </div>
 </x-app-layout>
