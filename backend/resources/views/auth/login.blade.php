@@ -36,7 +36,16 @@
         <x-primary-button class="w-full py-2.5">Giriş yap</x-primary-button>
     </form>
 
-    <div class="mt-8 rounded-xl border border-dashed border-line bg-white px-4 py-3 text-sm text-ink-soft">
-        Demo hesap: <strong class="font-medium text-ink">demo@market.test</strong>, şifre <strong class="font-medium text-ink">password</strong>
+    {{-- Demo hesap: butona basınca e-posta ve şifre alanları otomatik dolar --}}
+    <div class="mt-8 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-line bg-white px-4 py-3 text-sm text-ink-soft">
+        <span>
+            Demo hesap: <strong class="font-medium text-ink">demo@market.test</strong>, şifre <strong class="font-medium text-ink">password</strong>
+        </span>
+        <button type="button" class="btn-secondary px-3 py-1.5 text-xs"
+                onclick="document.getElementById('email').value = 'demo@market.test';
+                         document.getElementById('password').value = 'password';
+                         document.getElementById('password').focus();">
+            Demo bilgilerini doldur
+        </button>
     </div>
 </x-guest-layout>
