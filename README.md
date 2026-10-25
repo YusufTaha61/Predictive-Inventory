@@ -31,7 +31,10 @@ Browser ──> Laravel app (backend/) ──HTTP──> Python ML service (ml/)
   **Random Forest / Gradient Boosting** model, chosen by time-based validation against simple baselines.
 - Features: past sales, weekday averages, calendar and holidays, promotion days and discount, shelf life, price.
 - New products with little history get a simple average instead of the model.
-- **Order suggestion** = 7-day forecast + 20 % safety stock − current stock.
+- **Order suggestion** = expected sales until the next delivery + safety stock − current stock.
+  The safety stock grows with the forecast error. For perishable products it balances the cost of
+  waste against the lost profit of an empty shelf (newsvendor model), and an order never covers
+  more days than the product's shelf life.
 - **Waste risk** = current stock − what can be sold before the shelf life ends.
 
 **Tech stack:** PHP 8.4, Laravel 13, Breeze, Tailwind CSS, SQLite · Python, pandas, scikit-learn, FastAPI
@@ -72,10 +75,42 @@ php artisan ml:train
 
 This trains the model on the app's data and loads it into the running service.
 
+## Results
+
+Measured on the demo data with `ml/src/backtest.py` and `ml/src/report.py`
+(numbers in [`ml/reports/`](ml/reports)).
+
+**Forecast accuracy.** Error of 7-day-ahead forecasts, time-based validation (lower is better).
+The ML models beat the simple rules a shop would use.
+
+![Model comparison](ml/reports/model_comparison.png)
+
+**Ordering simulation.** The last 180 days are replayed with the same sales, shelf lives and
+delivery days; only the order quantity changes. Ordering with the forecast lowers the total cost
+(waste + lost profit) compared with ordering by habit, and the ML forecast does better than a
+simple average. The first rule of the app (7-day forecast + 20 %) is also in the table: it was far
+too much for products that spoil in a few days, which is why it was replaced.
+
+![Ordering policies](ml/reports/policy_comparison.png)
+
+**What the model looks at.** Promotions, recent sales level and volatility matter most.
+
+![Feature importance](ml/reports/feature_importance.png)
+
+To reproduce (in `ml/`, after `php artisan ml:train`):
+
+```bash
+python -m src.backtest           # ordering simulation
+python -m src.report             # model comparison and feature importance charts
+python -m unittest               # automated tests
+```
+
 ## Limitations
 
 The demo data is synthetic, so results show that the system works, not how well it performs in a
-real shop. Next steps: validation on real sales data and more automated tests.
+real shop. The purchase price is not stored, so it is assumed to be 60 % of the sales price.
+Recorded sales are used as demand, so lost sales are underestimated on days when stock ran out.
+Next step: validation on real sales data.
 
 ## Author
 
