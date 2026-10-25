@@ -1,0 +1,5 @@
+policy,demand,sold,waste,waste_cost,lost_margin,total_cost,avg_stock_value,waste_pct,lost_sales_pct,saving_vs_habit_pct
+Alışkanlık,46912.0,44263,2744,46362.0,74454.0,120816.0,44423.03,5.84,5.65,0.0
+Eski öneri (7 gün + %20),46912.0,40074,127105,1789203.0,159668.0,1948871.0,48289.07,76.03,14.58,-1513.09
+Akıllı sipariş (basit tahmin),46912.0,44308,963,18906.0,58502.0,77408.0,53169.92,2.13,5.55,35.93
+Akıllı sipariş (ML),46912.0,44816,860,12819.0,44428.0,57247.0,50208.7,1.88,4.47,52.62

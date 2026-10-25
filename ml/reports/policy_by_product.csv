@@ -1,0 +1,69 @@
+policy,product_id,product,perishable,demand,sold,waste,waste_cost,lost_margin,avg_stock_value,total_cost
+Alışkanlık,21,Ekmek,True,10997.0,10906,1690,15210.0,546.0,630.0,15756.0
+Eski öneri (7 gün + %20),21,Ekmek,True,10997.0,10997,79528,715752.0,0.0,4549.25,715752.0
+Akıllı sipariş (basit tahmin),21,Ekmek,True,10997.0,10473,508,4572.0,3144.0,549.05,7716.0
+Akıllı sipariş (ML),21,Ekmek,True,10997.0,10474,477,4293.0,3138.0,547.55,7431.0
+Alışkanlık,22,Simit,True,4565.0,4488,771,9252.0,616.0,350.6,9868.0
+Eski öneri (7 gün + %20),22,Simit,True,4565.0,4563,33584,403008.0,16.0,2554.73,403024.0
+Akıllı sipariş (basit tahmin),22,Simit,True,4565.0,4293,371,4452.0,2176.0,310.93,6628.0
+Akıllı sipariş (ML),22,Simit,True,4565.0,4322,349,4188.0,1944.0,311.4,6132.0
+Alışkanlık,23,Süt 1 L,True,3507.0,3450,0,0.0,1026.0,1092.75,1026.0
+Eski öneri (7 gün + %20),23,Süt 1 L,True,3507.0,3507,3889,105003.0,0.0,4193.85,105003.0
+Akıllı sipariş (basit tahmin),23,Süt 1 L,True,3507.0,3292,0,0.0,3870.0,820.05,3870.0
+Akıllı sipariş (ML),23,Süt 1 L,True,3507.0,3349,0,0.0,2844.0,826.65,2844.0
+Alışkanlık,24,Yoğurt 1 kg,True,2079.0,2043,11,726.0,1584.0,2182.77,2310.0
+Eski öneri (7 gün + %20),24,Yoğurt 1 kg,True,2079.0,2079,1084,71544.0,0.0,5085.3,71544.0
+Akıllı sipariş (basit tahmin),24,Yoğurt 1 kg,True,2079.0,1933,0,0.0,6424.0,1564.2,6424.0
+Akıllı sipariş (ML),24,Yoğurt 1 kg,True,2079.0,1957,0,0.0,5368.0,1519.47,5368.0
+Alışkanlık,25,Ayran 300 ml,True,3830.0,3714,0,0.0,928.0,757.13,928.0
+Eski öneri (7 gün + %20),25,Ayran 300 ml,True,3830.0,3830,1703,20436.0,0.0,1969.27,20436.0
+Akıllı sipariş (basit tahmin),25,Ayran 300 ml,True,3830.0,3510,0,0.0,2560.0,526.6,2560.0
+Akıllı sipariş (ML),25,Ayran 300 ml,True,3830.0,3704,0,0.0,1008.0,554.47,1008.0
+Alışkanlık,26,Beyaz Peynir 500 g,False,1023.0,981,11,1452.0,3696.0,4689.67,5148.0
+Eski öneri (7 gün + %20),26,Beyaz Peynir 500 g,False,1023.0,1007,0,0.0,1408.0,4158.73,1408.0
+Akıllı sipariş (basit tahmin),26,Beyaz Peynir 500 g,False,1023.0,988,10,1320.0,3080.0,4695.53,4400.0
+Akıllı sipariş (ML),26,Beyaz Peynir 500 g,False,1023.0,1014,3,396.0,792.0,4634.67,1188.0
+Alışkanlık,27,Yumurta 30'lu,False,1113.0,1100,25,3450.0,1196.0,3887.0,4646.0
+Eski öneri (7 gün + %20),27,Yumurta 30'lu,False,1113.0,1113,96,13248.0,0.0,5414.97,13248.0
+Akıllı sipariş (basit tahmin),27,Yumurta 30'lu,False,1113.0,1110,33,4554.0,276.0,4376.13,4830.0
+Akıllı sipariş (ML),27,Yumurta 30'lu,False,1113.0,1113,9,1242.0,0.0,3985.13,1242.0
+Alışkanlık,28,Domates,True,2886.0,2775,105,3150.0,2220.0,968.67,5370.0
+Eski öneri (7 gün + %20),28,Domates,True,2886.0,2886,3755,112650.0,0.0,3116.33,112650.0
+Akıllı sipariş (basit tahmin),28,Domates,True,2886.0,2546,4,120.0,6800.0,706.33,6920.0
+Akıllı sipariş (ML),28,Domates,True,2886.0,2654,0,0.0,4640.0,714.17,4640.0
+Alışkanlık,29,Muz,True,1566.0,1488,83,4482.0,2808.0,941.4,7290.0
+Eski öneri (7 gün + %20),29,Muz,True,1566.0,1561,2193,118422.0,180.0,3162.9,118602.0
+Akıllı sipariş (basit tahmin),29,Muz,True,1566.0,1386,22,1188.0,6480.0,709.5,7668.0
+Akıllı sipariş (ML),29,Muz,True,1566.0,1489,10,540.0,2772.0,751.2,3312.0
+Alışkanlık,30,Tavuk Göğüs,True,951.0,915,48,8640.0,4320.0,1901.0,12960.0
+Eski öneri (7 gün + %20),30,Tavuk Göğüs,True,951.0,951,1273,229140.0,0.0,6271.0,229140.0
+Akıllı sipariş (basit tahmin),30,Tavuk Göğüs,True,951.0,832,15,2700.0,14280.0,1479.0,16980.0
+Akıllı sipariş (ML),30,Tavuk Göğüs,True,951.0,862,12,2160.0,10680.0,1478.0,12840.0
+Alışkanlık,31,Dondurma,False,2728.0,2134,0,0.0,14256.0,4841.0,14256.0
+Eski öneri (7 gün + %20),31,Dondurma,False,2728.0,1077,0,0.0,39624.0,1361.4,39624.0
+Akıllı sipariş (basit tahmin),31,Dondurma,False,2728.0,2548,0,0.0,4320.0,8674.0,4320.0
+Akıllı sipariş (ML),31,Dondurma,False,2728.0,2541,0,0.0,4488.0,8841.6,4488.0
+Alışkanlık,32,"Su 1,5 L",False,7634.0,6793,0,0.0,6728.0,5351.73,6728.0
+Eski öneri (7 gün + %20),32,"Su 1,5 L",False,7634.0,4216,0,0.0,27344.0,1534.87,27344.0
+Akıllı sipariş (basit tahmin),32,"Su 1,5 L",False,7634.0,7402,0,0.0,1856.0,5309.8,1856.0
+Akıllı sipariş (ML),32,"Su 1,5 L",False,7634.0,7372,0,0.0,2096.0,5283.4,2096.0
+Alışkanlık,33,Çay 1 kg,False,528.0,409,0,0.0,21420.0,6816.0,21420.0
+Eski öneri (7 gün + %20),33,Çay 1 kg,False,528.0,269,0,0.0,46620.0,1921.5,46620.0
+Akıllı sipariş (basit tahmin),33,Çay 1 kg,False,528.0,518,0,0.0,1800.0,11190.0,1800.0
+Akıllı sipariş (ML),33,Çay 1 kg,False,528.0,515,0,0.0,2340.0,9199.5,2340.0
+Alışkanlık,34,Makarna 500 g,False,1940.0,1715,0,0.0,3150.0,2359.58,3150.0
+Eski öneri (7 gün + %20),34,Makarna 500 g,False,1940.0,1086,0,0.0,11956.0,680.4,11956.0
+Akıllı sipariş (basit tahmin),34,Makarna 500 g,False,1940.0,1940,0,0.0,0.0,2612.52,0.0
+Akıllı sipariş (ML),34,Makarna 500 g,False,1940.0,1927,0,0.0,182.0,2383.97,182.0
+Alışkanlık,35,Ayçiçek Yağı 1 L,False,770.0,632,0,0.0,6072.0,2590.13,6072.0
+Eski öneri (7 gün + %20),35,Ayçiçek Yağı 1 L,False,770.0,452,0,0.0,13992.0,895.77,13992.0
+Akıllı sipariş (basit tahmin),35,Ayçiçek Yağı 1 L,False,770.0,757,0,0.0,572.0,3426.87,572.0
+Akıllı sipariş (ML),35,Ayçiçek Yağı 1 L,False,770.0,752,0,0.0,792.0,3430.53,792.0
+Alışkanlık,36,Lokum 500 g,False,377.0,365,0,0.0,864.0,3169.2,864.0
+Eski öneri (7 gün + %20),36,Lokum 500 g,False,377.0,235,0,0.0,10224.0,842.4,10224.0
+Akıllı sipariş (basit tahmin),36,Lokum 500 g,False,377.0,371,0,0.0,432.0,3837.0,432.0
+Akıllı sipariş (ML),36,Lokum 500 g,False,377.0,369,0,0.0,576.0,3713.4,576.0
+Alışkanlık,37,Bulaşık Deterjanı,False,418.0,355,0,0.0,3024.0,1894.4,3024.0
+Eski öneri (7 gün + %20),37,Bulaşık Deterjanı,False,418.0,245,0,0.0,8304.0,576.4,8304.0
+Akıllı sipariş (basit tahmin),37,Bulaşık Deterjanı,False,418.0,409,0,0.0,432.0,2382.4,432.0
+Akıllı sipariş (ML),37,Bulaşık Deterjanı,False,418.0,402,0,0.0,768.0,2033.6,768.0

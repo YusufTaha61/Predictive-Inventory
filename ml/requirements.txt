@@ -3,6 +3,8 @@ pandas>=2.2
 numpy>=1.26
 # Makine öğrenmesi (Random Forest, Gradient Boosting)
 scikit-learn>=1.5
+# Grafikler (sipariş simülasyonu ve raporlar)
+matplotlib>=3.8
 # Eğitilen modeli dosyaya kaydetmek için
 joblib>=1.3
 # Tahmin API'si
