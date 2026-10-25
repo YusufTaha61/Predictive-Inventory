@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 import pandas as pd
@@ -21,12 +22,13 @@ def db_path() -> Path:
     return Path(os.getenv("DB_PATH") or DEFAULT_DB)
 
 
-def _connect() -> sqlite3.Connection:
+def _connect():
     path = db_path()
     if not path.exists():
         raise FileNotFoundError(f"veritabanı bulunamadı: {path}")
     # Sadece okuma modunda açılır; Python tarafı veritabanına hiçbir şey yazmaz.
-    return sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+    # closing(): "with" bloğu bitince bağlantı kapanır (Windows'ta açık dosya kilitli kalmasın).
+    return closing(sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True))
 
 
 def load_products(product_id: int | None = None) -> pd.DataFrame:
@@ -106,6 +108,31 @@ def load_promotions(product_id: int | None = None) -> pd.DataFrame:
     promos["starts_on"] = pd.to_datetime(promos["starts_on"])
     promos["ends_on"] = pd.to_datetime(promos["ends_on"])
     return promos
+
+
+def load_delivery_every(product_id: int | None = None) -> dict[int, int]:
+    """Her ürün için tedarikçinin kaç günde bir mal getirdiği (son 90 gündeki stok girişlerinden).
+
+    Ardışık iki giriş arasındaki gün sayılarının ortancası (median) alınır.
+    En az 3 girişi olmayan ürün listede yer almaz (teslimat aralığı bilinmiyor).
+    """
+    only_one = "" if product_id is None else "AND product_id = ?"
+    params: tuple = () if product_id is None else (product_id,)
+    with _connect() as con:
+        ins = pd.read_sql_query(
+            f"""SELECT DISTINCT product_id, date(moved_on) AS date
+                FROM stock_movements
+                WHERE type = 'in' {only_one}
+                  AND date(moved_on) >= date((SELECT MAX(moved_on) FROM stock_movements), '-90 days')
+                ORDER BY product_id, date""",
+            con, params=params,
+        )
+    ins["date"] = pd.to_datetime(ins["date"])
+    result = {}
+    for pid, g in ins.groupby("product_id"):
+        if len(g) >= 3:
+            result[int(pid)] = max(1, int(round(g["date"].diff().dt.days.median())))
+    return result
 
 
 def promo_days(promos: pd.DataFrame) -> pd.DataFrame:

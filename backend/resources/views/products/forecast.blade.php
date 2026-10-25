@@ -62,9 +62,23 @@
                         <dt class="text-ink-muted">Elindeki stok</dt>
                         <dd class="font-medium tabular-nums">{{ $qty($stock) }} {{ $product->unit }}</dd>
                     </div>
+                    @if (isset($order['cover_days']))
+                        <div class="flex justify-between px-6 py-3">
+                            <dt class="text-ink-muted">Kaç günlük</dt>
+                            <dd class="font-medium tabular-nums">{{ $order['cover_days'] }} gün <span class="text-ink-muted">(sonraki teslimata kadar)</span></dd>
+                        </div>
+                        <div class="flex justify-between px-6 py-3">
+                            <dt class="text-ink-muted">Beklenen satış</dt>
+                            <dd class="font-medium tabular-nums">{{ $qty($order['expected_sales']) ?: '0' }} {{ $product->unit }}</dd>
+                        </div>
+                        <div class="flex justify-between px-6 py-3">
+                            <dt class="text-ink-muted">Yedek stok</dt>
+                            <dd class="font-medium tabular-nums">{{ $qty($order['safety_stock']) ?: '0' }} {{ $product->unit }}</dd>
+                        </div>
+                    @endif
                     <div class="flex justify-between px-6 py-3">
                         <dt class="text-ink-muted">Hesap</dt>
-                        <dd class="font-medium">7 günlük satış + %20 yedek − stok</dd>
+                        <dd class="font-medium">Beklenen satış + yedek − stok</dd>
                     </div>
                 </dl>
             </div>

@@ -15,12 +15,12 @@ böylece eğitim ve tahmin birbirinden farklılaşamaz.
 """
 from __future__ import annotations
 
-import math
 import joblib
 import numpy as np
 import pandas as pd
 
-from .data import load_daily_sales, load_products, load_promotions
+from . import decision
+from .data import load_daily_sales, load_delivery_every, load_products, load_promotions
 from .features import FEATURES, HORIZON, MIN_HISTORY_DAYS, add_promotions, build_features
 from .train import predict_units
 
@@ -124,27 +124,43 @@ def forecast(bundle: dict | None, product_id: int) -> dict:
     }
 
 
-SAFETY_RATIO = 0.2  # %20 yedek stok
-
-
 def order_suggestion(bundle: dict | None, product_id: int, current_stock: float) -> dict:
-    """Kaç tane sipariş vermeli? = 7 günlük satış + %20 yedek - elimdeki stok"""
+    """Kaç tane sipariş vermeli? = teslimata kadar beklenen satış + yedek stok - elimdeki stok
+
+    Hesabın ayrıntısı decision.py'de: yedek stok tahmin hatasına ve ürünün bozulup
+    bozulmadığına göre değişir, sipariş raf ömründen uzun bir süreyi karşılamaz.
+    """
     fc = forecast(bundle, product_id)
-    total = fc["total_next_7_days"]
-    if total is None:
+    if fc["total_next_7_days"] is None:
         return {"product_id": product_id, "method": fc["method"], "suggested_order": None,
                 "warnings": fc["warnings"]}
 
-    safety = total * SAFETY_RATIO
-    need = total + safety - current_stock
+    product = load_products(product_id).iloc[0]
+    shelf = None if pd.isna(product["shelf_life_days"]) else int(product["shelf_life_days"])
+    price = float(product["price"])
+    warnings = list(fc["warnings"])
+
+    every = load_delivery_every(product_id).get(product_id)
+    if every is None:
+        warnings.append(f"teslimat aralığı bilinmiyor (son 90 günde az stok girişi var), "
+                        f"{decision.DEFAULT_COVER_DAYS} gün varsayıldı")
+    days = decision.cover_days(every, shelf)
+    daily = decision.extend_forecast([d["units"] for d in fc["forecast"]], days)
+    sigma = decision.forecast_error_std(load_daily_sales(product_id)["units_sold"])
+    service = decision.service_level(price, shelf, days)
+    order = decision.order_quantity(daily, current_stock, sigma, service)
+
     return {
         "product_id": product_id,
         "method": fc["method"],
-        "expected_sales_7_days": total,
-        "safety_stock": round(safety, 2),
+        "delivery_every_days": every,
+        "cover_days": days,
+        "service_level": round(service, 2),
+        "expected_sales": order["expected_sales"],
+        "safety_stock": order["safety_stock"],
         "current_stock": current_stock,
-        "suggested_order": max(0, math.ceil(need)),
-        "warnings": fc["warnings"],
+        "suggested_order": order["suggested_order"],
+        "warnings": warnings,
     }
 
 
