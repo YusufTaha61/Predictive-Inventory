@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductForecastController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StockMovementController;
+use App\Http\Controllers\StockMovementImportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,6 +22,9 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('products', ProductController::class)->except('show');
     Route::get('products/{product}/forecast', ProductForecastController::class)->name('products.forecast');
+    Route::get('stock-movements/import', [StockMovementImportController::class, 'create'])->name('stock-movements.import');
+    Route::post('stock-movements/import', [StockMovementImportController::class, 'store'])->name('stock-movements.import.store');
+    Route::get('stock-movements/import/template', [StockMovementImportController::class, 'template'])->name('stock-movements.import.template');
     Route::resource('stock-movements', StockMovementController::class)->only(['index', 'create', 'store', 'destroy']);
 });
 

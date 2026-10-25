@@ -2,9 +2,14 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">Stok Hareketleri</h2>
-            <a href="{{ route('stock-movements.create') }}">
-                <x-primary-button type="button">Yeni Hareket</x-primary-button>
-            </a>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('stock-movements.import') }}">
+                                <x-secondary-button type="button">CSV Yükle</x-secondary-button>
+                            </a>
+                            <a href="{{ route('stock-movements.create') }}">
+                                <x-primary-button type="button">Yeni Hareket</x-primary-button>
+                            </a>
+                        </div>
         </div>
     </x-slot>
 
