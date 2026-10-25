@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Company;
 use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Hash;
  *  - Satışlar hafta içi/hafta sonu, mevsim ve bayram etkisine göre değişir.
  *  - Bozulabilir ürünler son kullanma tarihi geçince "fire" olur.
  *  - Stok azalınca tedarikçiden "stok girişi" gelir.
+ *  - Ürünlerde ara sıra 3-7 günlük kampanyalar (indirim) olur, o günlerde satış artar.
+ *    Bazı ürünlerin yarından başlayan kampanyası da vardır (tahmin sayfasında görünsün diye).
  *
  * Aynı veriyi her seferinde üretmek için rastgelelik sabit bir sayıyla (42) başlatılır.
  * Tekrar çalıştırılabilir: önce eski Demo Market verisini siler.
@@ -65,6 +68,12 @@ class DemoDataSeeder extends Seeder
         ['name' => 'Bulaşık Deterjanı', 'sku' => 'TMZ-001', 'price' => 120, 'shelf' => 730, 'daily' => 2],
     ];
 
+    /** İndirim oranının satışa etkisi: %20 indirim satışı 1 + 0.20 x 2.5 = 1.5 katına çıkarır */
+    private const PROMO_EFFECT = 2.5;
+
+    /** Önümüzdeki günlerde kampanyası olan ürünler (SKU => indirim %). Yarın başlar, 4 gün sürer. */
+    private const UPCOMING_PROMOS = ['ICK-001' => 20, 'DON-001' => 25, 'KRU-001' => 15, 'SUT-002' => 20];
+
     /**
      * Bayram günleri ve hemen öncesi (alışveriş en çok bayram arifesinde olur).
      * Aynı liste ml/src/features.py içinde de var; birini değiştirirsen diğerini de değiştir.
@@ -85,6 +94,7 @@ class DemoDataSeeder extends Seeder
             $oldIds = Company::where('name', self::COMPANY_NAME)->pluck('id');
             User::where('email', self::DEMO_EMAIL)->delete();
             StockMovement::whereIn('company_id', $oldIds)->delete();
+            Promotion::whereIn('company_id', $oldIds)->delete();
             Product::whereIn('company_id', $oldIds)->delete();
             Company::whereIn('id', $oldIds)->delete();
 
@@ -141,6 +151,29 @@ class DemoDataSeeder extends Seeder
             ];
         };
 
+        // Kampanyalar ve kampanya günlerindeki satış çarpanı (ekmek, simit gibi günlük ürünlerde kampanya yok)
+        $promotions = $p['life'] === 1 ? [] : $this->planPromotions($start, $end);
+        if (isset(self::UPCOMING_PROMOS[$p['sku']])) {
+            $first = $end->copy()->addDays(2); // veri dünde bitiyor, yani kampanya yarın başlar
+            $promotions[] = [$first, $first->copy()->addDays(3), self::UPCOMING_PROMOS[$p['sku']]];
+        }
+        $promoBoost = [];
+        foreach ($promotions as [$from, $to, $discount]) {
+            for ($d = $from->copy(); $d->lte($to); $d->addDay()) {
+                $promoBoost[$d->toDateString()] = 1 + $discount / 100 * self::PROMO_EFFECT;
+            }
+            DB::table('promotions')->insert([
+                'company_id' => $companyId,
+                'product_id' => $productId,
+                'name' => "%$discount indirim",
+                'starts_on' => $from->toDateString(),
+                'ends_on' => $to->toDateString(),
+                'discount_percent' => $discount,
+                'created_at' => $start,
+                'updated_at' => $start,
+            ]);
+        }
+
         // Stok, son kullanma tarihleri farklı partiler halinde tutulur: [miktar, son gün]
         $batches = [];
         $demandHistory = [];
@@ -151,7 +184,8 @@ class DemoDataSeeder extends Seeder
         $add(StockMovement::TYPE_IN, $opening, $start, 'Açılış stoğu');
 
         for ($day = $start->copy(); $day->lte($end); $day->addDay()) {
-            $expected = $this->expectedDemand($p, $day);
+            $boost = $promoBoost[$day->toDateString()] ?? 1.0;
+            $expected = $this->expectedDemand($p, $day) * $boost;
 
             // 1) Sabah: tedarikçiden mal gelir
             if (! $day->eq($start)) {
@@ -163,7 +197,9 @@ class DemoDataSeeder extends Seeder
                         // Bu yüzden talep düşünce fire, artınca stoksuzluk olur.
                         $recent = array_slice($demandHistory, -14);
                         $estimate = $recent ? array_sum($recent) / count($recent) : $p['daily'];
-                        $need = $estimate * $p['every'] * $p['over'] * mt_rand(85, 115) / 100;
+                        // Kendi kampanyasını bildiği için kampanya günlerine fazladan sipariş verir
+                        $need = $estimate * $p['every'] * $p['over'] * mt_rand(85, 115) / 100
+                            * $this->averageBoost($promoBoost, $day, $p['every']);
                         $order = (int) round($need - $this->total($batches) * 0.5);
                     }
                 } elseif ($this->total($batches) < $expected * 5) {
@@ -180,7 +216,7 @@ class DemoDataSeeder extends Seeder
             $demand = $this->poisson($expected);
             $sold = min($demand, $this->total($batches));
             $add(StockMovement::TYPE_SALE, $sold, $day);
-            $demandHistory[] = $demand;
+            $demandHistory[] = $demand / $boost; // kampanya etkisini ayırır, normal talebi hatırlar
             $left = $sold;
             foreach ($batches as $i => $batch) {
                 $take = min($left, $batch[0]);
@@ -218,6 +254,38 @@ class DemoDataSeeder extends Seeder
         foreach (array_chunk($rows, 500) as $chunk) {
             DB::table('stock_movements')->insert($chunk);
         }
+    }
+
+    /**
+     * Geçmiş kampanyalar: 25-55 günde bir, 3-7 gün süren, %10-30 indirimli.
+     *
+     * @return array<int, array{0: Carbon, 1: Carbon, 2: int}> [başlangıç, bitiş, indirim %]
+     */
+    private function planPromotions(Carbon $start, Carbon $end): array
+    {
+        $promotions = [];
+        $from = $start->copy()->addDays(mt_rand(14, 40));
+        while (true) {
+            $to = $from->copy()->addDays(mt_rand(3, 7) - 1);
+            if ($to->gt($end)) {
+                break;
+            }
+            $promotions[] = [$from, $to, [10, 15, 20, 25, 30][mt_rand(0, 4)]];
+            $from = $to->copy()->addDays(mt_rand(25, 55));
+        }
+
+        return $promotions;
+    }
+
+    /** $day'den başlayan $days gün içindeki ortalama kampanya çarpanı */
+    private function averageBoost(array $promoBoost, Carbon $day, int $days): float
+    {
+        $total = 0.0;
+        for ($i = 0; $i < $days; $i++) {
+            $total += $promoBoost[$day->copy()->addDays($i)->toDateString()] ?? 1.0;
+        }
+
+        return $total / $days;
     }
 
     /** Partilerdeki toplam stok */
