@@ -26,6 +26,9 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        // Demo hesabın adı ve e-postası değiştirilemez (herkes aynı bilgilerle giriş yapabilsin)
+        abort_if($request->user()->isDemo(), 403, 'Demo hesabın bilgileri değiştirilemez.');
+
         $request->user()->fill($request->validated());
 
         if ($request->user()->isDirty('email')) {
@@ -42,6 +45,9 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Demo hesap silinemez
+        abort_if($request->user()->isDemo(), 403, 'Demo hesap silinemez.');
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);

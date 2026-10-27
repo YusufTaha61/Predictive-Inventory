@@ -15,6 +15,9 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
+        // Demo hesabın şifresi değiştirilemez
+        abort_if($request->user()->isDemo(), 403, 'Demo hesabın şifresi değiştirilemez.');
+
         $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],

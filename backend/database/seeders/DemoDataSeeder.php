@@ -26,12 +26,11 @@ use Illuminate\Support\Facades\Hash;
  * Tekrar çalıştırılabilir: önce eski Demo Market verisini siler.
  *
  * Çalıştırmak: php artisan db:seed
- * Giriş: demo@market.test / password
+ * Giriş bilgileri config/demo.php dosyasında (.env: DEMO_EMAIL, DEMO_PASSWORD)
  */
 class DemoDataSeeder extends Seeder
 {
     private const COMPANY_NAME = 'Demo Market';
-    private const DEMO_EMAIL = 'demo@market.test';
     private const DAYS = 365;
 
     /**
@@ -93,7 +92,7 @@ class DemoDataSeeder extends Seeder
         DB::transaction(function () {
             // Daha önce oluşturulmuş demo veriyi temizle (tekrar çalıştırılabilsin)
             $oldIds = Company::where('name', self::COMPANY_NAME)->pluck('id');
-            User::where('email', self::DEMO_EMAIL)->delete();
+            User::where('email', config('demo.email'))->orWhereIn('company_id', $oldIds)->delete();
             StockMovement::whereIn('company_id', $oldIds)->delete();
             Promotion::whereIn('company_id', $oldIds)->delete();
             Product::whereIn('company_id', $oldIds)->delete();
@@ -103,8 +102,8 @@ class DemoDataSeeder extends Seeder
 
             User::create([
                 'name' => 'Demo Kullanıcı',
-                'email' => self::DEMO_EMAIL,
-                'password' => Hash::make('password'),
+                'email' => config('demo.email'),
+                'password' => Hash::make(config('demo.password')),
                 'company_id' => $company->id,
             ]);
 

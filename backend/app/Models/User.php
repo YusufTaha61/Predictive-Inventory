@@ -32,6 +32,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Demo hesap mı? Demo hesap korumalıdır: silinemez, şifresi ve bilgileri değiştirilemez.
+     */
+    public function isDemo(): bool
+    {
+        return strcasecmp($this->email, (string) config('demo.email')) === 0;
+    }
+
+    /**
      * Kullanıcı bir şirkete aittir.
      */
     public function company(): BelongsTo
