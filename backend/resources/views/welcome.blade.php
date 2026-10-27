@@ -94,11 +94,14 @@
                         @endauth
                     </div>
 
-                    @guest
-                        <p class="mt-5 text-sm text-white/55">
-                            Denemek için demo hesap: <span class="text-white/85">demo@market.test</span>, şifre <span class="text-white/85">password</span>
-                        </p>
-                    @endguest
+                    {{-- Demo hesap bilgisi sadece kendi bilgisayarımızda (APP_ENV=local) görünür --}}
+                    @env('local')
+                        @guest
+                            <p class="mt-5 text-sm text-white/55">
+                                Denemek için demo hesap: <span class="text-white/85">demo@market.test</span>, şifre <span class="text-white/85">password</span>
+                            </p>
+                        @endguest
+                    @endenv
                 </div>
 
                 {{-- Örnek tahmin kartı --}}
