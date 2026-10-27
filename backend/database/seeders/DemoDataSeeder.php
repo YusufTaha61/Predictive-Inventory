@@ -37,6 +37,7 @@ class DemoDataSeeder extends Seeder
     /**
      * Ürün tanımları:
      *  price    : satış fiyatı (₺)
+     *  cost     : alış fiyatı (₺), ürünü tedarikçiden kaça aldığımız
      *  unit     : ölçü birimi (Product::UNITS içinden), yoksa "adet"
      *  shelf    : bozulmayan ürünlerde ürün kartına yazılan raf ömrü (gün)
      *  daily    : ortalama günlük satış
@@ -49,23 +50,23 @@ class DemoDataSeeder extends Seeder
      *  holiday  : bayram günlerindeki çarpan
      */
     private const PRODUCTS = [
-        ['name' => 'Ekmek', 'sku' => 'FRN-001', 'price' => 15, 'daily' => 60, 'life' => 1, 'every' => 1, 'over' => 1.05, 'weekend' => 1.25],
-        ['name' => 'Simit', 'sku' => 'FRN-002', 'price' => 20, 'daily' => 25, 'life' => 1, 'every' => 1, 'over' => 1.05, 'weekend' => 1.40],
-        ['name' => 'Süt 1 L', 'sku' => 'SUT-001', 'price' => 45, 'daily' => 18, 'life' => 4, 'every' => 2, 'over' => 1.20],
-        ['name' => 'Yoğurt 1 kg', 'sku' => 'SUT-002', 'price' => 110, 'daily' => 10, 'life' => 5, 'every' => 3, 'over' => 1.10, 'season' => 0.15, 'peak' => 7],
-        ['name' => 'Ayran 300 ml', 'sku' => 'SUT-003', 'price' => 20, 'daily' => 14, 'life' => 6, 'every' => 3, 'over' => 1.15, 'season' => 0.60, 'peak' => 7],
-        ['name' => 'Beyaz Peynir 500 g', 'sku' => 'SUT-004', 'price' => 220, 'daily' => 5, 'life' => 12, 'every' => 7, 'over' => 1.10, 'holiday' => 1.8],
-        ['name' => 'Yumurta 30\'lu', 'sku' => 'KHV-001', 'price' => 230, 'unit' => 'paket', 'daily' => 6, 'life' => 8, 'every' => 5, 'over' => 1.10],
-        ['name' => 'Domates', 'sku' => 'MNV-001', 'price' => 50, 'unit' => 'kg', 'daily' => 12, 'life' => 3, 'every' => 2, 'over' => 1.20, 'season' => 0.35, 'peak' => 8],
-        ['name' => 'Muz', 'sku' => 'MNV-002', 'price' => 90, 'unit' => 'kg', 'daily' => 8, 'life' => 3, 'every' => 2, 'over' => 1.15],
-        ['name' => 'Tavuk Göğüs', 'sku' => 'ET-001', 'price' => 300, 'unit' => 'kg', 'daily' => 5, 'life' => 3, 'every' => 2, 'over' => 1.10, 'holiday' => 1.5],
-        ['name' => 'Dondurma', 'sku' => 'DON-001', 'price' => 60, 'shelf' => 180, 'daily' => 8, 'season' => 0.90, 'peak' => 7, 'weekend' => 1.35],
-        ['name' => 'Su 1,5 L', 'sku' => 'ICK-001', 'price' => 20, 'shelf' => 365, 'daily' => 30, 'season' => 0.50, 'peak' => 7],
-        ['name' => 'Çay 1 kg', 'sku' => 'ICK-002', 'price' => 450, 'unit' => 'paket', 'shelf' => 730, 'daily' => 3, 'season' => 0.20, 'peak' => 1],
-        ['name' => 'Makarna 500 g', 'sku' => 'KRU-001', 'price' => 35, 'unit' => 'paket', 'shelf' => 730, 'daily' => 10],
-        ['name' => 'Ayçiçek Yağı 1 L', 'sku' => 'KRU-002', 'price' => 110, 'shelf' => 365, 'daily' => 4],
-        ['name' => 'Lokum 500 g', 'sku' => 'SKR-001', 'price' => 180, 'unit' => 'paket', 'daily' => 2, 'life' => 60, 'every' => 14, 'over' => 1.10, 'holiday' => 6.0],
-        ['name' => 'Bulaşık Deterjanı', 'sku' => 'TMZ-001', 'price' => 120, 'shelf' => 730, 'daily' => 2],
+        ['name' => 'Ekmek', 'sku' => 'FRN-001', 'price' => 15, 'cost' => 10, 'daily' => 60, 'life' => 1, 'every' => 1, 'over' => 1.05, 'weekend' => 1.25],
+        ['name' => 'Simit', 'sku' => 'FRN-002', 'price' => 20, 'cost' => 13, 'daily' => 25, 'life' => 1, 'every' => 1, 'over' => 1.05, 'weekend' => 1.40],
+        ['name' => 'Süt 1 L', 'sku' => 'SUT-001', 'price' => 45, 'cost' => 34, 'daily' => 18, 'life' => 4, 'every' => 2, 'over' => 1.20],
+        ['name' => 'Yoğurt 1 kg', 'sku' => 'SUT-002', 'price' => 110, 'cost' => 80, 'daily' => 10, 'life' => 5, 'every' => 3, 'over' => 1.10, 'season' => 0.15, 'peak' => 7],
+        ['name' => 'Ayran 300 ml', 'sku' => 'SUT-003', 'price' => 20, 'cost' => 13, 'daily' => 14, 'life' => 6, 'every' => 3, 'over' => 1.15, 'season' => 0.60, 'peak' => 7],
+        ['name' => 'Beyaz Peynir 500 g', 'sku' => 'SUT-004', 'price' => 220, 'cost' => 165, 'daily' => 5, 'life' => 12, 'every' => 7, 'over' => 1.10, 'holiday' => 1.8],
+        ['name' => 'Yumurta 30\'lu', 'sku' => 'KHV-001', 'price' => 230, 'cost' => 185, 'unit' => 'paket', 'daily' => 6, 'life' => 8, 'every' => 5, 'over' => 1.10],
+        ['name' => 'Domates', 'sku' => 'MNV-001', 'price' => 50, 'cost' => 32, 'unit' => 'kg', 'daily' => 12, 'life' => 3, 'every' => 2, 'over' => 1.20, 'season' => 0.35, 'peak' => 8],
+        ['name' => 'Muz', 'sku' => 'MNV-002', 'price' => 90, 'cost' => 60, 'unit' => 'kg', 'daily' => 8, 'life' => 3, 'every' => 2, 'over' => 1.15],
+        ['name' => 'Tavuk Göğüs', 'sku' => 'ET-001', 'price' => 300, 'cost' => 230, 'unit' => 'kg', 'daily' => 5, 'life' => 3, 'every' => 2, 'over' => 1.10, 'holiday' => 1.5],
+        ['name' => 'Dondurma', 'sku' => 'DON-001', 'price' => 60, 'cost' => 38, 'shelf' => 180, 'daily' => 8, 'season' => 0.90, 'peak' => 7, 'weekend' => 1.35],
+        ['name' => 'Su 1,5 L', 'sku' => 'ICK-001', 'price' => 20, 'cost' => 11, 'shelf' => 365, 'daily' => 30, 'season' => 0.50, 'peak' => 7],
+        ['name' => 'Çay 1 kg', 'sku' => 'ICK-002', 'price' => 450, 'cost' => 330, 'unit' => 'paket', 'shelf' => 730, 'daily' => 3, 'season' => 0.20, 'peak' => 1],
+        ['name' => 'Makarna 500 g', 'sku' => 'KRU-001', 'price' => 35, 'cost' => 24, 'unit' => 'paket', 'shelf' => 730, 'daily' => 10],
+        ['name' => 'Ayçiçek Yağı 1 L', 'sku' => 'KRU-002', 'price' => 110, 'cost' => 85, 'shelf' => 365, 'daily' => 4],
+        ['name' => 'Lokum 500 g', 'sku' => 'SKR-001', 'price' => 180, 'cost' => 110, 'unit' => 'paket', 'daily' => 2, 'life' => 60, 'every' => 14, 'over' => 1.10, 'holiday' => 6.0],
+        ['name' => 'Bulaşık Deterjanı', 'sku' => 'TMZ-001', 'price' => 120, 'cost' => 80, 'shelf' => 730, 'daily' => 2],
     ];
 
     /** İndirim oranının satışa etkisi: %20 indirim satışı 1 + 0.20 x 2.5 = 1.5 katına çıkarır */
@@ -128,6 +129,7 @@ class DemoDataSeeder extends Seeder
             'sku' => $p['sku'],
             'unit' => $p['unit'],
             'price' => $p['price'],
+            'purchase_price' => $p['cost'] ?? null,
             'shelf_life_days' => $p['life'] ?? $p['shelf'],
             'created_at' => $start,
             'updated_at' => $start,
