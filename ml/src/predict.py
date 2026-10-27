@@ -19,8 +19,9 @@ import joblib
 import numpy as np
 import pandas as pd
 
+from . import batches as batch_calc
 from . import decision
-from .data import load_daily_sales, load_delivery_every, load_products, load_promotions
+from .data import load_daily_sales, load_delivery_every, load_products, load_promotions, load_stock_movements
 from .features import FEATURES, HORIZON, MIN_HISTORY_DAYS, add_promotions, build_features
 from .train import predict_units
 
@@ -170,37 +171,59 @@ def order_suggestion(bundle: dict | None, product_id: int, current_stock: float)
     }
 
 
+def _risk_level(at_risk: float, stock: float) -> str:
+    ratio = at_risk / stock if stock > 0 else 0
+    if ratio == 0:
+        return "none"
+    if ratio < 0.1:
+        return "low"
+    if ratio < 0.3:
+        return "medium"
+    return "high"
+
+
 def waste_risk(bundle: dict | None, product_id: int, current_stock: float, shelf_life_days: int) -> dict:
-    """Ne kadarı fire olur? = elimdeki stok - bozulmadan önce satılabilecek miktar"""
+    """Ne kadarı fire olur?
+
+    Önce parti bazlı hesap denenir (batches.py): stok, farklı günlerde gelen partilere bölünür
+    ve her partinin bozulmadan önce satılıp satılamayacağına bakılır.
+    Hareketlerden bulunan stok, Laravel'in gönderdiği stokla uyuşmuyorsa (örneğin stok eksiye
+    düşmüşse) eski basit hesaba dönülür: elimdeki stok - raf ömrü boyunca satılabilecek miktar.
+    """
     fc = forecast(bundle, product_id)
     if fc["total_next_7_days"] is None:
         return {"product_id": product_id, "method": fc["method"], "units_at_risk": None,
-                "risk_level": None, "warnings": fc["warnings"]}
+                "risk_level": None, "batches": [], "warnings": fc["warnings"]}
 
     daily = [d["units"] for d in fc["forecast"]]
-    if shelf_life_days <= len(daily):
-        sellable = sum(daily[:shelf_life_days])
-    else:
-        sellable = sum(daily) / len(daily) * shelf_life_days
+    warnings = list(fc["warnings"])
 
-    at_risk = max(0.0, current_stock - sellable)
-    ratio = at_risk / current_stock if current_stock > 0 else 0
-    if ratio == 0:
-        level = "none"
-    elif ratio < 0.1:
-        level = "low"
-    elif ratio < 0.3:
-        level = "medium"
+    lots = batch_calc.current_batches(load_stock_movements(product_id), shelf_life_days)
+    if lots and abs(sum(b["quantity"] for b in lots) - current_stock) < 0.5:
+        first_day = fc["forecast"][0]["date"]
+        details = batch_calc.simulate(lots, daily, first_day)
+        at_risk = sum(b["units_at_risk"] for b in details)
+        calc = "batches"
     else:
-        level = "high"
+        if current_stock > 0:
+            warnings.append("parti bilgisi stokla uyuşmuyor, fire riski basit yöntemle hesaplandı")
+        if shelf_life_days <= len(daily):
+            sellable = sum(daily[:shelf_life_days])
+        else:
+            sellable = sum(daily) / len(daily) * shelf_life_days
+        at_risk = max(0.0, current_stock - sellable)
+        details = []
+        calc = "simple"
 
     return {
         "product_id": product_id,
         "method": fc["method"],
+        "calculation": calc,
         "current_stock": current_stock,
         "shelf_life_days": shelf_life_days,
-        "sellable_before_expiry": round(sellable, 2),
+        "sellable_before_expiry": round(max(0.0, current_stock - at_risk), 2),
         "units_at_risk": round(at_risk, 2),
-        "risk_level": level,
-        "warnings": fc["warnings"],
+        "risk_level": _risk_level(at_risk, current_stock),
+        "batches": details,
+        "warnings": warnings,
     }

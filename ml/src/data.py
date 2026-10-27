@@ -94,6 +94,18 @@ def load_daily_sales(product_id: int | None = None) -> pd.DataFrame:
     return full.sort_values(["product_id", "date"]).reset_index(drop=True)
 
 
+def load_stock_movements(product_id: int) -> pd.DataFrame:
+    """Bir ürünün tüm stok hareketleri: date, type ('in' / 'sale' / 'waste'), quantity (eskiden yeniye)."""
+    with _connect() as con:
+        return pd.read_sql_query(
+            """SELECT date(moved_on) AS date, type, quantity
+               FROM stock_movements
+               WHERE product_id = ?
+               ORDER BY date(moved_on), id""",
+            con, params=(product_id,),
+        )
+
+
 def load_promotions(product_id: int | None = None) -> pd.DataFrame:
     """Kampanyalar: product_id, starts_on, ends_on, discount_percent.
 
