@@ -17,7 +17,7 @@ Yeni hesap:
       bozulabilen ürün: fire maliyeti ile kaçan satışın kârı dengelenir (gazeteci satıcısı
                         problemi / newsvendor). Ayrıntı service_level() içinde.
 
-Veritabanında alış fiyatı yok; bu yüzden alış fiyatı satış fiyatının COST_RATIO katı kabul edilir.
+Alış fiyatı ürün kartından gelir. Girilmemişse satış fiyatının COST_RATIO katı kabul edilir.
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from statistics import NormalDist
 
 import numpy as np
 
-COST_RATIO = 0.60          # alış fiyatı = satış fiyatı x 0.60 (yani %40 kâr)
+COST_RATIO = 0.60          # alış fiyatı girilmemişse: satış fiyatı x 0.60 (yani %40 kâr)
 PERISHABLE_DAYS = 7        # raf ömrü 7 gün veya daha az olan ürün "bozulabilir" sayılır
 NON_PERISHABLE_SERVICE = 0.95
 MIN_SERVICE = 0.50         # bozulabilir üründe bile beklenen satışın altına inilmez
@@ -35,15 +35,23 @@ DEFAULT_COVER_DAYS = 7     # teslimat aralığı bilinmiyorsa
 MAX_COVER_DAYS = 28        # en fazla 4 haftalık sipariş
 
 
-def unit_cost(price: float) -> float:
+def unit_cost(price: float, purchase_price=None) -> float:
+    """Alış fiyatı. Ürün kartında girilmişse o kullanılır, yoksa satış fiyatının %60'ı varsayılır."""
+    if has_purchase_price(purchase_price):
+        return float(purchase_price)
     return float(price) * COST_RATIO
+
+
+def has_purchase_price(purchase_price) -> bool:
+    """Alış fiyatı girilmiş mi? (boş veya NaN değilse)"""
+    return purchase_price is not None and purchase_price == purchase_price and float(purchase_price) >= 0
 
 
 def is_perishable(shelf_life_days) -> bool:
     return shelf_life_days is not None and 0 < shelf_life_days <= PERISHABLE_DAYS
 
 
-def service_level(price: float, shelf_life_days, cover: int) -> float:
+def service_level(price: float, shelf_life_days, cover: int, cost: float | None = None) -> float:
     """Talebin yüzde kaçı stoktan karşılansın? (0.95 = %95)
 
     Bozulabilir ürün (gazeteci satıcısı problemi):
@@ -53,13 +61,19 @@ def service_level(price: float, shelf_life_days, cover: int) -> float:
     Fire olma payı: fazla kalan ürün bir sonraki teslimat döneminde de satılabilir.
     Raf ömrü 1 gün olan ekmekte artan her şey çöpe gider (pay = 1); raf ömrü 4 gün olan
     ve 2 günde bir gelen sütte artanın yarısı bir sonraki dönemde satılır (pay = 2/4).
+
+    cost: alış fiyatı. Verilmezse satış fiyatının %60'ı kabul edilir.
     """
     if not is_perishable(shelf_life_days):
         return NON_PERISHABLE_SERVICE
     if price <= 0:
         return MIN_SERVICE
-    cost = unit_cost(price)
+    if cost is None:
+        cost = unit_cost(price)
     margin = price - cost
+    if margin <= 0:
+        # Zararına satılan ürün: fazla almanın hiçbir faydası yok
+        return MIN_SERVICE
     waste_share = min(1.0, cover / shelf_life_days)
     return float(np.clip(margin / (margin + cost * waste_share), MIN_SERVICE, MAX_SERVICE))
 

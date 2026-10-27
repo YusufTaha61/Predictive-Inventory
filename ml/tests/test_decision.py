@@ -20,6 +20,24 @@ class ServiceLevelTest(unittest.TestCase):
         self.assertLess(milk, decision.MAX_SERVICE)
 
 
+class PurchasePriceTest(unittest.TestCase):
+    def test_uses_purchase_price_when_given(self):
+        self.assertEqual(decision.unit_cost(15, 10), 10)
+
+    def test_falls_back_to_60_percent(self):
+        self.assertAlmostEqual(decision.unit_cost(15, None), 9)
+        self.assertAlmostEqual(decision.unit_cost(15, float("nan")), 9)
+
+    def test_higher_margin_raises_target(self):
+        # Süt: kâr yüksekse eksik kalmak daha pahalı -> daha yüksek hedef
+        cheap = decision.service_level(45, 4, 2, cost=20)
+        expensive = decision.service_level(45, 4, 2, cost=40)
+        self.assertGreater(cheap, expensive)
+
+    def test_no_margin_gives_minimum(self):
+        self.assertEqual(decision.service_level(45, 4, 2, cost=50), decision.MIN_SERVICE)
+
+
 class CoverDaysTest(unittest.TestCase):
     def test_not_longer_than_shelf_life(self):
         self.assertEqual(decision.cover_days(7, 1), 1)

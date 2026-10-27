@@ -150,11 +150,11 @@ def main() -> None:
         p = products.loc[pid]
         shelf = None if pd.isna(p["shelf_life_days"]) else int(p["shelf_life_days"])
         price = float(p["price"])
-        cost = decision.unit_cost(price)
+        cost = decision.unit_cost(price, p["purchase_price"])
         perishable = decision.is_perishable(shelf)
         every = delivery.get(int(pid), decision.DEFAULT_COVER_DAYS)
         days = decision.cover_days(every, shelf)
-        service = decision.service_level(price, shelf, days)
+        service = decision.service_level(price, shelf, days, cost)
         demand = g["units_sold"].to_numpy()
         F_ml, F_simple = g["pred"].to_numpy(), g["dow_mean_4"].to_numpy()
         past = sales[(sales["product_id"] == pid) & (sales["date"] < t0)]["units_sold"].to_numpy()

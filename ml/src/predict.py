@@ -138,7 +138,11 @@ def order_suggestion(bundle: dict | None, product_id: int, current_stock: float)
     product = load_products(product_id).iloc[0]
     shelf = None if pd.isna(product["shelf_life_days"]) else int(product["shelf_life_days"])
     price = float(product["price"])
+    purchase = product["purchase_price"]
+    cost = decision.unit_cost(price, purchase)
     warnings = list(fc["warnings"])
+    if not decision.has_purchase_price(purchase):
+        warnings.append("alış fiyatı girilmemiş, satış fiyatının %60'ı varsayıldı")
 
     every = load_delivery_every(product_id).get(product_id)
     if every is None:
@@ -147,7 +151,7 @@ def order_suggestion(bundle: dict | None, product_id: int, current_stock: float)
     days = decision.cover_days(every, shelf)
     daily = decision.extend_forecast([d["units"] for d in fc["forecast"]], days)
     sigma = decision.forecast_error_std(load_daily_sales(product_id)["units_sold"])
-    service = decision.service_level(price, shelf, days)
+    service = decision.service_level(price, shelf, days, cost)
     order = decision.order_quantity(daily, current_stock, sigma, service)
 
     return {
@@ -156,6 +160,8 @@ def order_suggestion(bundle: dict | None, product_id: int, current_stock: float)
         "delivery_every_days": every,
         "cover_days": days,
         "service_level": round(service, 2),
+        "unit_cost": round(cost, 2),
+        "cost_is_estimated": not decision.has_purchase_price(purchase),
         "expected_sales": order["expected_sales"],
         "safety_stock": order["safety_stock"],
         "current_stock": current_stock,

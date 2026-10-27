@@ -75,6 +75,17 @@
                             <dt class="text-ink-muted">Yedek stok</dt>
                             <dd class="font-medium tabular-nums">{{ $qty($order['safety_stock']) ?: '0' }} {{ $product->unit }}</dd>
                         </div>
+                        @if (isset($order['unit_cost']))
+                            <div class="flex justify-between px-6 py-3">
+                                <dt class="text-ink-muted">Alış fiyatı</dt>
+                                <dd class="font-medium tabular-nums">
+                                    {{ number_format($order['unit_cost'], 2, ',', '.') }} ₺
+                                    @if ($order['cost_is_estimated'])
+                                        <span class="text-ink-muted">(tahmini, satışın %60'ı)</span>
+                                    @endif
+                                </dd>
+                            </div>
+                        @endif
                     @endif
                     <div class="flex justify-between px-6 py-3">
                         <dt class="text-ink-muted">Hesap</dt>

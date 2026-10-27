@@ -32,13 +32,19 @@ def _connect():
 
 
 def load_products(product_id: int | None = None) -> pd.DataFrame:
-    """Ürünler: product_id, company_id, name, shelf_life_days, price."""
-    sql = "SELECT id AS product_id, company_id, name, shelf_life_days, price FROM products"
+    """Ürünler: product_id, company_id, name, shelf_life_days, price, purchase_price.
+
+    purchase_price (alış fiyatı) boş olabilir. Sütun henüz yoksa (migrate yapılmamışsa) boş gelir.
+    """
     params: tuple = ()
+    where = ""
     if product_id is not None:
-        sql += " WHERE id = ?"
+        where = " WHERE id = ?"
         params = (product_id,)
     with _connect() as con:
+        columns = {row[1] for row in con.execute("PRAGMA table_info(products)")}
+        purchase = "purchase_price" if "purchase_price" in columns else "NULL AS purchase_price"
+        sql = f"SELECT id AS product_id, company_id, name, shelf_life_days, price, {purchase} FROM products{where}"
         return pd.read_sql_query(sql, con, params=params)
 
 
