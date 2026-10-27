@@ -124,6 +124,47 @@
             </div>
         </div>
 
+        {{-- Stoktaki partiler: hangi parti ne zaman bozulacak? --}}
+        @if (! empty($waste['batches']))
+            <div class="card overflow-hidden">
+                <div class="card-body pb-4">
+                    <h2 class="card-title">Stoktaki partiler</h2>
+                    <p class="mt-1 text-sm text-ink-muted">
+                        Satışlar önce en eski partiden düşülür. Bozulma gününe kadar satılamayacak miktar fire riskidir.
+                    </p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Geliş</th>
+                                <th>Bozulma</th>
+                                <th class="num">Elde kalan</th>
+                                <th class="num">Fire riski</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($waste['batches'] as $batch)
+                                @php
+                                    $arrived = \Illuminate\Support\Carbon::parse($batch['arrived_on']);
+                                    $expires = \Illuminate\Support\Carbon::parse($batch['expires_on']);
+                                    $atRisk = $batch['units_at_risk'] > 0;
+                                @endphp
+                                <tr>
+                                    <td class="tabular-nums">{{ $arrived->format('d.m.Y') }}</td>
+                                    <td class="tabular-nums">{{ $expires->format('d.m.Y') }}</td>
+                                    <td class="num">{{ $qty($batch['quantity']) }} {{ $product->unit }}</td>
+                                    <td class="num {{ $atRisk ? 'font-semibold text-tomato-700' : 'text-ink-muted' }}">
+                                        {{ $atRisk ? $qty($batch['units_at_risk']) . ' ' . $product->unit : '—' }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
         {{-- Günlük satış tahmini --}}
         <div class="card card-body">
             <div class="flex flex-wrap items-center justify-between gap-3">
