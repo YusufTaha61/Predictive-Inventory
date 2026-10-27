@@ -86,6 +86,7 @@ class ProductController extends Controller
             ],
             'unit' => ['required', Rule::in(Product::UNITS)],
             'price' => ['required', 'numeric', 'min:0'],
+            'purchase_price' => ['nullable', 'numeric', 'min:0'],
             'shelf_life_days' => ['nullable', 'integer', 'min:1'],
         ]);
     }

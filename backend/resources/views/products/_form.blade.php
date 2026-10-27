@@ -33,6 +33,14 @@
 </div>
 
 <div class="mt-5">
+    <x-input-label for="purchase_price" value="Alış Fiyatı (₺, isteğe bağlı)" />
+    <x-text-input id="purchase_price" name="purchase_price" type="number" step="any" min="0" class="mt-1.5 block w-full"
+                  :value="old('purchase_price', $product->purchase_price ?? '')" />
+    <p class="field-hint">Ürünü tedarikçiden kaça alıyorsunuz? Sipariş önerisi gerçek kâra göre hesaplanır. Boş bırakılırsa satış fiyatının %60'ı varsayılır.</p>
+    <x-input-error :messages="$errors->get('purchase_price')" class="mt-2" />
+</div>
+
+<div class="mt-5">
     <x-input-label for="shelf_life_days" value="Raf Ömrü (gün, isteğe bağlı)" />
     <x-text-input id="shelf_life_days" name="shelf_life_days" type="number" min="1" class="mt-1.5 block w-full"
                   :value="old('shelf_life_days', $product->shelf_life_days ?? '')" />
