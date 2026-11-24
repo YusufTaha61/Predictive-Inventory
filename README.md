@@ -6,6 +6,8 @@
 
 A web app that helps small shops order the right amount of stock. ML models forecast sales for the next 7 days, suggest how much to order and show which stock may expire unsold. The final decision always belongs to the shop owner. The interface is in Turkish.
 
+![Dashboard](docs/screenshots/dashboard.png)
+
 ## Features
 
 - **Stock tracking:** products, stock in / sale / waste records, bulk CSV upload
@@ -15,6 +17,12 @@ A web app that helps small shops order the right amount of stock. ML models fore
 - **Dashboard:** sales, revenue, waste rate, low-stock products
 - **Multi-company (SaaS):** each company only sees its own data
 - **Demo data:** one year of sales for "Demo Market" with a local-only demo login
+
+## Screenshots
+
+| 7-day forecast and order suggestion | Products |
+|---|---|
+| ![Forecast](docs/screenshots/forecast.png) | ![Products](docs/screenshots/products.png) |
 
 ## Tech stack
 
